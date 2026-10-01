@@ -90,21 +90,20 @@ async function exportOverview(){
  try{
  const canvas=document.createElement('canvas');canvas.width=1200;canvas.height=1120;const t=canvasTools(canvas),ctx=canvas.getContext('2d');
  t.box(0,0,1200,1120,'#f5f7ef',0);t.text('ねむりの食材手帳',30,43,26,'#294a39',600);t.text(`19食材の担当 / ${snapshot.mode==='current'?'現在のレベル':`Lv.${snapshot.mode}（現在Lv.を下げない）`} / ${new Date().toLocaleDateString('ja-JP')}`,30,74,14,'#65755f');
- const pictures=new Map();await Promise.all(snapshot.pokemon.map(async p=>{const sp=C.species(p.species);if(!sp)return;const im=new Image();im.src=`assets/pokemon/${sp.dex}.png`;try{await im.decode();pictures.set(p.id,im);}catch{}}));
  for(let index=0;index<D.ingredients.length;index++){
  const ing=D.ingredients[index],a=snapshot.assignments[ing.id],p=snapshot.pokemon.find(p=>p.id===a?.pokemonId),x=30+(index%4)*290,y=95+Math.floor(index/4)*182;
  t.box(x,y,276,170,'#ffffff',10);t.text(`${ing.icon} ${ing.name}`,x+12,y+25,15,'#294a39',600,235);t.text(a?.complete?'✓':p?'○':'',x+250,y+25,16,'#658655');
  if(!p){t.text('担当未登録',x+85,y+99,15,'#8a9585');continue;}
- const im=pictures.get(p.id);if(im)ctx.drawImage(im,x+6,y+30,52,52);t.text(pokemonName(p),x+60,y+57,15,'#35543d',600,205);
+ t.text(pokemonName(p),x+12,y+53,15,'#35543d',600,250);t.text(`Lv.${p.level}${C.effectiveLevel(p,snapshot.mode)>p.level?' → '+C.effectiveLevel(p,snapshot.mode):''}`,x+12,y+72,11,'#76826e');
  t.text(p.slots.map((id,i)=>`${C.ingredient(id)?.icon||'?'}${C.slotStatus(p,C.ING_LEVELS[i],snapshot.mode)==='locked'?'·':C.slotStatus(p,C.ING_LEVELS[i],snapshot.mode)==='projected'?'↗':''}`).join('  '),x+12,y+97,21,'#4b6340');
- const n=C.nature(p.nature),nature=n?[['ingredient','食'],['speed','速']].map(([k,v])=>n.positiveModifier===k?v+'↑':n.negativeModifier===k?v+'↓':'').filter(Boolean).join(' ')||'食速±':'性格?';t.text(nature,x+165,y+97,14,'#556f4e');
+ const n=C.nature(p.nature),nature=n?[['ingredient','食'],['speed','速']].map(([k,v])=>n.positiveModifier===k?v+'↑':n.negativeModifier===k?v+'↓':'').filter(Boolean).join(' '):'性格?';t.text(nature,x+165,y+97,14,'#556f4e');
  const abbreviations={INGREDIENT_FINDER_S:'食S',INGREDIENT_FINDER_M:'食M',HELPING_SPEED_S:'速S',HELPING_SPEED_M:'速M',HELPING_BONUS:'おボ',INVENTORY_S:'所S',INVENTORY_M:'所M',INVENTORY_L:'所L',BERRY_FINDING_S:'きS'};
  let skillX=x+12;p.subskills.forEach((id,i)=>{if(id&&!abbreviations[id])return;const st=C.slotStatus(p,C.SKILL_LEVELS[i],snapshot.mode),label=(st==='locked'?'·':st==='projected'?'↗':'')+(abbreviations[id]||'?');t.box(skillX,y+117,46,25,st==='locked'?'#f1f2ed':st==='projected'?'#fff0cb':'#e9f1e2',4);t.text(label,skillX+5,y+135,13,st==='locked'?'#7d8777':'#496342');skillX+=49;});
- t.text(`現在Lv.${p.level} / 表示Lv.${C.effectiveLevel(p,snapshot.mode)}`,x+12,y+160,11,'#76826e');
+ const daily=BoardView.daily(p,snapshot.mode,snapshot.energy);t.text('1日',x+12,y+160,11,'#65755f');t.text(daily.result.ok?daily.items.map(([id,v])=>`${C.ingredient(id).icon} ${v.toFixed(1)}`).join('  '):daily.result.level>70?'— 将来・未計算':'— 条件不足',x+42,y+160,16,'#294a39',600,224);
  }
  t.text('食＝食材確率 / 速＝速度 / 所＝所持数 / おボ＝おてつだいボーナス / きS＝きのみの数S',30,1036,13,'#63745b');
- t.text('· 未解放 / ↗ 試算で解放 / 記号なし 解放済み / ? 未入力 / 食速± 性格の食材・速度補正なし',30,1059,13,'#63745b');
- t.text('厳選は手動設定。Lv.80は将来試算。収集数・料理比較はアプリの詳細で確認できます。',30,1082,13,'#63745b');
+ t.text('· 未解放 / ↗ 試算で解放 / 記号なし 解放済み / ? 未入力 / 性格は食材・速度の補正のみ表示',30,1059,13,'#63745b');
+ t.text(`通常おてつだい24時間 / げんき${snapshot.energy}一定 / 満杯前回収 / 本人補正・リボン / 他個体・スキル・キャンプ等なし`,30,1082,12,'#63745b');t.text(`各個体を別々に稼働した期待値。3食の保証ではありません。Lv.80未計算 / ${D.meta.version} / ${D.meta.calcVersion}`,30,1104,12,'#63745b');
  const url=canvas.toDataURL('image/png');$('overview-preview').innerHTML='';const img=document.createElement('img'),link=document.createElement('a');img.src=url;img.alt='19食材の担当と特徴を比較する一覧画像';link.href=url;link.download='ねむりの食材手帳-19食材.png';link.textContent='一覧画像を保存';$('overview-preview').append(img,link);open('overview-dialog');
  }catch{toast('画像を作成できませんでした。もう一度お試しください');}finally{button.disabled=false;button.textContent='19食材を1枚に';}
 }
