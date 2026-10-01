@@ -1,0 +1,25 @@
+# Private inputs and credentials
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+credentials*
+secrets*
+*.json
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.heic
+*.zip
+screenshots/
+uploads/
+backups/
+private/
+work/
+_site/
+node_modules/
+__pycache__/
+.DS_Store
