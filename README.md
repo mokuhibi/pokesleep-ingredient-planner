@@ -24,9 +24,13 @@ Macでは `起動.command` を開いても起動できます。ブラウザー�
 
 ## GitHub Pagesで公開
 
+公開URL：https://mokuhibi.github.io/pokesleep-ingredient-planner/
+
+2026-10-01より公開リポジトリと無料のGitHub Pagesを使用します。アプリ利用のログインは不要です。
+
 リポジトリ名は `pokesleep-ingredient-planner`、ブランチは `main` を使用します。Settings → Pages → Build and deploymentで **GitHub Actions** を選び、Publish GitHub Pagesを実行します。公開URLは成功したActionsのdeployment出力とSettings → Pagesで確認できます。
 
-非公開リポジトリからのPages公開にはGitHub Pro以上が必要です。新しい有料契約を自動で開始しないでください。Pagesの画面・JavaScript・共通データは公開されますが、Git履歴は非公開リポジトリ内に残ります。アプリの利用者にGitHubログインは不要です。
+リポジトリのコードとGit履歴、Pagesの画面・JavaScript・共通データは公開されます。登録した個体情報は含まれません。コミットには個人のメールアドレスではなくGitHubのnoreply形式を使用します。有料契約は不要です。
 
 公開時は必要なHTML/CSS/JavaScriptとライセンスだけを許可リスト方式で配信します。個体データ、バックアップ、スクショ、認証情報を追加しないでください。
 
