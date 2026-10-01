@@ -25,9 +25,7 @@ function skillsHTML(p,all=false){const list=p.subskills.map((id,i)=>({id,i,s:C.s
 function levelLabel(p){const l=C.effectiveLevel(p,state.mode);return state.mode==='current'?`現在 Lv.${p.level}`:`現在 ${p.level} → 計算 Lv.${l}${l>D.meta.calcCap?'（将来）':''}`;}
 function ingredientLabel(ing,p){return `<div class="ingredient-label"><span class="ingredient-icon" aria-hidden="true">${ing.icon}</span><div><h3>${esc(ing.name)}</h3>${p?`<button class="text-button" data-detail="${esc(p.id)}">${esc(pokemonName(p))}</button><span class="level-text">${levelLabel(p)}</span>`:'<span class="level-text">担当未登録</span>'}</div></div>`;}
 function render(){
- const assigned=Object.keys(state.assignments).length,complete=Object.values(state.assignments).filter(a=>a.complete).length;
- $('assigned-count').textContent=assigned;$('complete-count').textContent=complete;$('ingredient-count').textContent=D.ingredients.length;$('member-count').textContent=state.pokemon.length;
- $('progress-ring').style.setProperty('--progress',(complete/D.ingredients.length*360)+'deg');$('progress-caption').textContent=assigned?`あと ${D.ingredients.length-complete} 食材の厳選を、自分のペースで。`:'最初の担当を登録しましょう';
+ $('member-count').textContent=state.pokemon.length;
  document.querySelectorAll('[data-level]').forEach(b=>b.classList.toggle('active',b.dataset.level===state.mode));$('energy-summary').textContent=state.energy;$('future-notice').hidden=state.mode!=='80';
  $('save-status').textContent=state.updatedAt?'保存済み '+new Date(state.updatedAt).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'未登録';
  renderBoard();renderMembers();renderCooking();renderSources();
@@ -39,7 +37,7 @@ function renderBoard(){
  document.body.classList.toggle('compact-board',boardLayout==='compact'&&tab==='board');
  $('board-list').className=boardLayout==='compact'?'harvest-grid':'comparison-grid';
  $('board-list').innerHTML=BoardView.render({state,list,layout:boardLayout,slotsHTML,skillsHTML,levelLabel});
- $('board-view-note').textContent=boardLayout==='compact'?'19食材を見渡す・記号で特徴を比較':'担当個体を比較・同じ個体は1枚に集約';
+ $('board-view-note').textContent=boardLayout==='compact'?'全19食材を表示・検索対象は濃く表示':'担当個体を比較・同じ個体は1枚に集約';
 }
 
 function renderMembers(){ $('member-list').innerHTML=state.pokemon.length?state.pokemon.map(p=>`<article class="member-card"><div class="member-card-top"><div><h3>${esc(pokemonName(p))}</h3><span class="member-specialty">${esc(speciesName(p))} · ${specialtyNames[C.species(p.species)?.specialty]||'未対応種族'}</span></div><span class="pill">Lv.${p.level}</span></div>${slotsHTML(p)}${skillsHTML(p)}${natureBadge(p)}<div class="member-assignment">担当：${D.ingredients.filter(i=>state.assignments[i.id]?.pokemonId===p.id).map(i=>esc(i.name)).join('・')||'未設定'}</div><button class="button wide" data-detail="${esc(p.id)}">詳細をみる</button></article>`).join(''):'<div class="empty-message" style="grid-column:1/-1"><div class="empty-symbol">☾</div><h3>最初の個体を記録しましょう。</h3><p>食材の並び、サブスキル、性格。未入力の項目はあとから追記できます。</p><button class="button primary" data-new>＋ 個体を登録</button></div>';}
