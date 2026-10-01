@@ -10,3 +10,10 @@ assert(B.nature(p).includes('食↑'));p.nature='BRAVE';assert(B.nature(p).inclu
 assert(B.skills(p,'current').includes('·おボ'));assert(B.skills(p,'70').includes('↗おボ'));assert(B.skills(p,'80').includes('↗所L'));
 assert.equal(B.time(3661),'1:01:01');console.log('PASS 19 tiles, unique individuals, no data mutation, escaped labels, nature directions, unlock states, time formatting');
 const current=B.render({...options,layout:'compact'});assert(!current.includes('<img'));assert(!current.includes('portrait'));assert(current.includes('Lv.60'));assert(current.includes('1日'));assert(current.includes(C.calc(p,'current',100).counts.Sausage.toFixed(1)));const duplicate={...p,nature:'BASHFUL',slots:['Sausage','Sausage','Sausage']};const yieldData=B.daily(duplicate,'current',100);assert.equal(yieldData.items.length,1);assert.equal(yieldData.items[0][1],C.calc(duplicate,'current',100).counts.Sausage);assert.equal(B.daily(p,'80',100).items.length,0);assert(!B.nature({...p,nature:'BASHFUL'},true).includes('食速±'));console.log('PASS text-only compact view, level, daily counts, duplicate ingredient totals, future unknown, nature abbreviations');
+const visible=compact.replace(/<[^>]*>/g,'');
+for(const ing of D.ingredients)assert(!visible.includes(ing.name),'ingredient names must remain in accessible labels only');
+assert.equal((compact.match(/class="compact-row compact-heading"/g)||[]).length,19);
+assert.equal((compact.match(/class="compact-row compact-traits"/g)||[]).length,2);
+assert.equal((compact.match(/class="compact-yield"/g)||[]).length,2);
+assert(!visible.includes('1日'));assert(!visible.includes('Lv.60'));
+console.log('PASS compact row structure, icon-only ingredients, no redundant daily or level labels');

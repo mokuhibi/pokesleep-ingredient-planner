@@ -1,6 +1,6 @@
 <!doctype html>
 <html lang="ja">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#244c3e"><meta name="description" content="ポケモンスリープの食材担当と厳選の記録。自分だけの食材手帳。"><title>ねむりの食材手帳</title><link rel="stylesheet" href="style.css?v=1.1.1"></head>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#244c3e"><meta name="description" content="ポケモンスリープの食材担当と厳選の記録。自分だけの食材手帳。"><title>ねむりの食材手帳</title><link rel="stylesheet" href="style.css?v=1.1.2"></head>
 <body>
 <header class="site-header"><div class="brand"><span class="brand-mark" aria-hidden="true">☾</span><div>ねむりの食材手帳<small>POKÉMON SLEEP · MY INGREDIENT JOURNAL</small></div></div><div class="header-actions"><span class="local-indicator">この端末に保存</span><button class="button subtle" id="backup-menu">保存・復元</button><button class="button primary" id="share-open">↗ 画像でシェア</button></div></header>
 <main>
@@ -23,5 +23,5 @@
 <dialog id="backup"><div class="dialog-head"><h2>保存とバックアップ</h2><button class="icon-button" data-close="backup" aria-label="閉じる">×</button></div><div class="dialog-body"><p>入力内容はこのブラウザに自動保存します。端末やブラウザを変えるときは、バックアップを書き出してください。</p><button class="button primary wide" id="export-backup">↓ バックアップを書き出す</button><hr><label>バックアップから復元<input id="import-backup" type="file" accept=".json,application/json"></label><p class="small muted">形式と内容を検証し、件数を確認してから置き換えます。現在のデータを先に書き出すことをおすすめします。</p><div id="import-preview"></div><p class="form-error" id="backup-error" role="alert"></p></div></dialog>
 <dialog id="share" class="large-dialog"><div class="dialog-head"><div><p class="eyebrow">SHARE YOUR HARVEST</p><h2>厳選の記録を、1枚に。</h2></div><button class="icon-button" data-close="share" aria-label="閉じる">×</button></div><div class="dialog-body"><div class="share-options"><label class="checkbox-label"><input type="checkbox" id="share-counts"> 推定収集数も載せる</label><label class="checkbox-label"><input type="checkbox" id="share-recipe"> 選択中の料理との比較を載せる</label></div><details><summary>載せる食材を選択</summary><div id="share-ingredients" class="assignment-fields"></div></details><p class="small muted">1枚6食材まで。多い場合は分割します。表示レベルと計算条件を画像にも記載します。画像は長押し・右クリックでも保存できます。</p><button class="button primary" id="share-generate">画像を作る</button><div id="share-preview"></div></div></dialog>
 <div id="toast" role="status" aria-live="polite"></div>
-<script src="data.js?v=1.1.1"></script><script src="core.js?v=1.1.1"></script><script src="board.js?v=1.1.1"></script><script src="app.js?v=1.1.1"></script>
+<script src="data.js?v=1.1.2"></script><script src="core.js?v=1.1.2"></script><script src="board.js?v=1.1.2"></script><script src="app.js?v=1.1.2"></script>
 </body></html>
