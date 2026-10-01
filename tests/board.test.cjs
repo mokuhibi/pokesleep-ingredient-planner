@@ -1,0 +1,11 @@
+const vm=require('node:vm'),fs=require('node:fs'),assert=require('node:assert/strict'),path=require('node:path');
+const ctx={};vm.createContext(ctx);for(const file of ['data.js','core.js','board.js'])vm.runInContext(fs.readFileSync(path.join(__dirname,'..',file),'utf8'),ctx);
+const C=ctx.SleepCore,D=ctx.SleepData,B=ctx.BoardView,s=C.emptyState();
+const p={id:'test',species:'CHARIZARD',customName:'',nickname:'<script>test</script>',memo:'',level:60,slots:['Sausage','Ginger','Herb'],subskills:['INGREDIENT_FINDER_S','HELPING_SPEED_M','INGREDIENT_FINDER_M','HELPING_BONUS','INVENTORY_L'],nature:'QUIET',ribbon:0,carry:null,mainSkillLevel:null};
+s.pokemon=[p];s.assignments.Sausage={pokemonId:p.id,complete:true,note:'',completedAt:null};s.assignments.Ginger={pokemonId:p.id,complete:false,note:'',completedAt:null};
+const options={state:s,list:D.ingredients,slotsHTML:()=>'',skillsHTML:()=>'',levelLabel:()=>''};
+const before=JSON.stringify(s),compact=B.render({...options,layout:'compact'}),rich=B.render({...options,layout:'rich'});
+assert.equal((compact.match(/<article/g)||[]).length,19);assert.equal((rich.match(/<article/g)||[]).length,1);assert.equal(JSON.stringify(s),before);assert(!compact.includes('<script>'));assert(compact.includes('&lt;script&gt;'));
+assert(B.nature(p).includes('食↑'));p.nature='BRAVE';assert(B.nature(p).includes('速↑'));
+assert(B.skills(p,'current').includes('·おボ'));assert(B.skills(p,'70').includes('↗おボ'));assert(B.skills(p,'80').includes('↗所L'));
+assert.equal(B.time(3661),'1:01:01');console.log('PASS 19 tiles, unique individuals, no data mutation, escaped labels, nature directions, unlock states, time formatting');
