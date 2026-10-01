@@ -17,3 +17,7 @@ assert.equal((compact.match(/class="compact-row compact-traits"/g)||[]).length,2
 assert.equal((compact.match(/class="compact-yield"/g)||[]).length,2);
 assert(!visible.includes('1日'));assert(!visible.includes('Lv.60'));
 console.log('PASS compact row structure, icon-only ingredients, no redundant daily or level labels');
+for(const [slots,expected] of [[['Sausage','Sausage','Sausage'],'AAA'],[['Sausage','Sausage','Ginger'],'AAB'],[['Sausage','Ginger','Sausage'],'ABA'],[['Sausage','Sausage','Herb'],'AAC'],[['Sausage','','Herb'],'A?C']])assert.equal(B.slotLetters({...p,slots}).join(''),expected);
+assert.equal(B.slotLetters({...p,species:''}).join(''),'???');
+assert(B.render({...options,layout:'compact'}).includes('letter-slots'));
+console.log('PASS species-based letters including AAC, missing slots and unknown species');

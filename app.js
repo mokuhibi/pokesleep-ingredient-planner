@@ -96,7 +96,7 @@ async function exportOverview(){
  if(!p){t.text('未登録',x+40,y+25,14,'#8a9585');continue;}
  t.text(pokemonName(p),x+40,y+25,14,'#35543d',600,143);
  const n=C.nature(p.nature),nature=n?[['ingredient','食'],['speed','速']].map(([k,v])=>n.positiveModifier===k?v+'↑':n.negativeModifier===k?v+'↓':'').filter(Boolean).join(' '):'性格?';t.text(nature,x+198,y+25,12,'#556f4e');
- t.text(p.slots.map((id,i)=>`${C.ingredient(id)?.icon||'?'}${C.slotStatus(p,C.ING_LEVELS[i],snapshot.mode)==='locked'?'·':C.slotStatus(p,C.ING_LEVELS[i],snapshot.mode)==='projected'?'↗':''}`).join(' '),x+9,y+53,17,'#4b6340');
+ t.text(BoardView.slotLetters(p).join(''),x+9,y+53,19,'#294a39',700);
  const abbreviations={INGREDIENT_FINDER_S:'食S',INGREDIENT_FINDER_M:'食M',HELPING_SPEED_S:'速S',HELPING_SPEED_M:'速M',HELPING_BONUS:'おボ',INVENTORY_S:'所S',INVENTORY_M:'所M',INVENTORY_L:'所L',BERRY_FINDING_S:'きS'};
  let skillX=x+101;p.subskills.forEach((id,i)=>{if(id&&!abbreviations[id])return;const st=C.slotStatus(p,C.SKILL_LEVELS[i],snapshot.mode),label=(st==='locked'?'·':st==='projected'?'↗':'')+(abbreviations[id]||'?');t.box(skillX,y+36,31,22,st==='locked'?'#f1f2ed':st==='projected'?'#fff0cb':'#e9f1e2',4);t.text(label,skillX+2,y+52,11,st==='locked'?'#7d8777':'#496342');skillX+=33;});
  const daily=BoardView.daily(p,snapshot.mode,snapshot.energy);t.text(daily.result.ok?daily.items.map(([id,v])=>`${C.ingredient(id).icon} ${v.toFixed(1)}`).join('  '):daily.result.level>70?'— 将来・未計算':'— 条件不足',x+10,y+83,18,'#294a39',600,256);

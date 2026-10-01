@@ -24,3 +24,10 @@
 @media(max-width:1100px){.harvest-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:800px){.harvest-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:540px){.harvest-grid{grid-template-columns:minmax(0,1fr);gap:5px}.harvest-tile{min-height:88px;padding:5px 9px}.compact-heading .mini-person-name{font-size:13px}.compact-heading .mini-nature{font-size:12px}.compact-traits .mini-skills{gap:3px}.compact-traits .mini-skill{padding:0 3px}.compact-yield b{font-size:16px}}
+
+/* Compact cards stay visually independent at every width. */
+.harvest-grid{gap:10px;align-items:stretch}.harvest-tile{border:1px solid #cbd8c8;border-radius:12px;box-shadow:0 2px 5px #294a3909;padding:8px 10px;min-height:98px;background:#fff}
+.letter-slots{display:inline-flex;flex-shrink:0;align-items:center;letter-spacing:1px;font-size:18px;font-weight:800;line-height:22px;color:#294a39}.letter-slots .locked{color:#85907d;text-decoration:underline dotted;text-underline-offset:3px}.letter-slots .projected{background:#fff0ce;border-radius:3px}
+@media(max-width:540px){.harvest-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.harvest-tile{padding:7px;min-height:106px}.compact-heading{flex-wrap:wrap;gap:2px}.compact-heading .tile-status{min-width:22px;font-size:16px}.compact-heading .mini-person-name{font-size:12px}.compact-heading .mini-nature{margin-left:auto;font-size:11px}.compact-traits{gap:3px}.compact-traits .mini-skills{gap:2px}.compact-traits .mini-skill{padding:0 2px}.compact-yield{gap:1px 5px}.compact-yield b{font-size:14px}.letter-slots{font-size:17px;letter-spacing:0}}
+/* Safari zooms small text fields on focus. Preserve pinch zoom and use readable form text. */
+@media(max-width:800px){body input,body select,body textarea,body .slot-field select,body .skill-fields select{font-size:16px;min-width:0;max-width:100%}body .slot-fields{grid-template-columns:1fr}body .skill-fields{grid-template-columns:1fr 1fr}}
