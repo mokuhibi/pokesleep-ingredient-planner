@@ -98,13 +98,11 @@ $('editor').addEventListener('close',hideSpecies);
 $('pokemon-form').addEventListener('submit',savePokemon);
 $('delete-pokemon').onclick=()=>{const id=$('pokemon-id').value;if(!confirm('この個体と、この個体に紐づく担当設定を削除しますか？'))return;const next=clone(state);next.pokemon=next.pokemon.filter(p=>p.id!==id);for(const [ing,a] of Object.entries(next.assignments))if(a.pokemonId===id)delete next.assignments[ing];if(commit(next,'個体を削除しました'))$('editor').close();};
 $('add-pokemon').onclick=$('add-member').onclick=()=>openEditor();
-async function exportOverview(){
- const snapshot=clone(state),button=$('overview-export');button.disabled=true;button.textContent='作成中…';
- try{
+function legacyOverviewCanvas(snapshot,sort){
  const canvas=document.createElement('canvas');canvas.width=1200;canvas.height=810;const t=canvasTools(canvas),ctx=canvas.getContext('2d');
  t.box(0,0,1200,810,'#f5f7ef',0);t.text('ねむりの食材手帳',30,43,26,'#294a39',600);t.text(`19食材の担当 / ${snapshot.mode==='current'?'現在のレベル':`Lv.${snapshot.mode}（現在Lv.を下げない）`} / ${new Date().toLocaleDateString('ja-JP')}`,30,74,14,'#65755f');
  for(let index=0;index<D.ingredients.length;index++){
- const ing=BoardView.orderedIngredients(ingredientOrder)[index],a=snapshot.assignments[ing.id],p=snapshot.pokemon.find(p=>p.id===a?.pokemonId),x=30+(index%4)*290,y=95+Math.floor(index/4)*120;
+ const ing=BoardView.orderedIngredients(sort)[index],a=snapshot.assignments[ing.id],p=snapshot.pokemon.find(p=>p.id===a?.pokemonId),x=30+(index%4)*290,y=95+Math.floor(index/4)*120;
  t.box(x,y,276,108,'#ffffff',10);t.text(ing.icon,x+9,y+25,18,'#294a39');t.text(a?.complete?'✓':p?'○':'',x+28,y+13,10,'#658655');
  if(!p){t.text('未登録',x+40,y+25,14,'#8a9585');continue;}
  t.text(pokemonName(p),x+40,y+25,14,'#35543d',600,143);
@@ -118,6 +116,37 @@ async function exportOverview(){
  t.text('食＝食材確率 / 速＝速度 / 所＝所持数 / おボ＝おてつだいボーナス / きS＝きのみの数S',30,719,13,'#63745b');
  t.text('· 未解放 / ↗ 試算で解放 / 記号なし 解放済み / ? 未入力 / 性格は食材・速度の補正のみ表示',30,742,13,'#63745b');
  t.text(`通常おてつだい24時間 / げんき${snapshot.energy}一定 / 満杯前回収 / 本人補正・リボン / ${simulationLabel(snapshot)} / 他個体・スキル等なし`,30,765,12,'#63745b');t.text(`各個体を別々に稼働した期待値。3食の保証ではありません。Lv.80未計算 / ${D.meta.version} / ${D.meta.calcVersion}`,30,788,12,'#63745b');
+ return canvas;
+}
+async function compactOverviewCanvas(snapshot,sort){
+ // Use the exact board component and app stylesheet in a 1200px viewport.
+ // The iframe prevents a phone's media queries from changing the four-column image.
+ const frame=document.createElement('iframe');frame.title='一覧画像の生成';frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;frame.style.cssText='position:fixed;left:-14000px;top:0;width:1200px;height:1100px;border:0;pointer-events:none';
+ const ready=new Promise((resolve,reject)=>{frame.onload=resolve;frame.onerror=()=>reject(new Error('画像用スタイルを読み込めませんでした'));});
+ const sheetURL=new URL(document.querySelector('link[rel="stylesheet"]').href,location.href).href;
+ frame.srcdoc=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><link rel="stylesheet" href="${sheetURL}"><style>body.export-sheet{margin:0;padding:24px;max-width:none;width:1200px;box-sizing:border-box;background:#f5f7ef}.export-sheet .harvest-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.export-sheet h1{font:600 26px -apple-system,sans-serif;margin:0 0 8px;color:#294a39}.export-subtitle,.export-footnote{font-size:13px;line-height:1.7;color:#63745b;margin:0 0 16px}.export-footnote{margin:16px 0 0;white-space:pre-wrap}.export-sheet button{cursor:default}</style></head><body class="export-sheet"></body></html>`;
+ document.body.append(frame);
+ try{
+ await ready;const doc=frame.contentDocument,body=doc.body;
+ const title=doc.createElement('h1');title.textContent='ねむりの食材手帳';body.append(title);
+ const subtitle=doc.createElement('p');subtitle.className='export-subtitle';subtitle.textContent=`19食材 / ${sort==='specified'?'指定順':'エナジー順'} / ${snapshot.mode==='current'?'現在のレベル':`想定Lv.${snapshot.mode}（現在Lv.を下げない）`} / ${simulationLabel(snapshot)} / ${new Date().toLocaleDateString('ja-JP')}`;body.append(subtitle);
+ const grid=doc.createElement('div');grid.className='harvest-grid';grid.innerHTML=BoardView.render({state:snapshot,list:D.ingredients,layout:'compact',sort});body.append(grid);
+ const levels=BoardView.orderedIngredients(sort).flatMap(i=>{const p=snapshot.pokemon.find(p=>p.id===snapshot.assignments[i.id]?.pokemonId);return p?[`${i.icon} Lv.${C.effectiveLevel(p,snapshot.mode)}`]:[];});
+ const note=doc.createElement('p');note.className='export-footnote';note.textContent=`計算レベル：${levels.join(' / ')||'担当未登録'}
+食＝食材確率 / 速＝速度 / 所＝所持数 / おボ＝おてつだいボーナス / きS＝きのみの数S
+実線＝解放済み / 黄色＝想定で解放 / 点線・·＝未解放 / ?＝未入力
+通常おてつだい24時間・げんき${snapshot.energy}固定・満杯前回収・本人補正とリボン・他個体/スキル/イベント等なし
+各担当を個別に稼働した期待値。実チームで3食作れる保証ではありません。Lv.80は将来試算・日量未計算。
+データ ${D.meta.version} / 計算 ${D.meta.calcVersion}`;body.append(note);
+ await doc.fonts.ready;
+ const height=Math.ceil(body.scrollHeight);frame.style.height=height+'px';
+ return await html2canvas(body,{scale:2,backgroundColor:'#f5f7ef',width:1200,height,windowWidth:1200,windowHeight:height,scrollX:0,scrollY:0,logging:false});
+ }finally{frame.remove();}
+}
+async function exportOverview(){
+ const snapshot=clone(state),sort=ingredientOrder,layout=boardLayout,button=$('overview-export');button.disabled=true;button.textContent='作成中…';
+ try{
+ const canvas=layout==='compact'?await compactOverviewCanvas(snapshot,sort):legacyOverviewCanvas(snapshot,sort);
  const url=canvas.toDataURL('image/png');$('overview-preview').innerHTML='';const img=document.createElement('img'),link=document.createElement('a');img.src=url;img.alt='19食材の担当と特徴を比較する一覧画像';link.href=url;link.download='ねむりの食材手帳-19食材.png';link.textContent='一覧画像を保存';$('overview-preview').append(img,link);open('overview-dialog');
  }catch{toast('画像を作成できませんでした。もう一度お試しください');}finally{button.disabled=false;button.textContent='19食材を1枚に';}
 }
