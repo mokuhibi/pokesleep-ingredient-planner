@@ -23,3 +23,9 @@ assert(B.render({...options,layout:'compact'}).includes('letter-slots'));
 console.log('PASS species-based letters including AAC, missing slots and unknown species');
 
 assert.equal((B.render({...options,list:[],layout:"compact"}).match(/<article/g)||[]).length,19);assert(compact.indexOf("mini-nature")<compact.indexOf("letter-slots"));
+const masterBefore=JSON.stringify(D.ingredients);
+assert.deepEqual(Array.from(B.orderedIngredients('energy'),x=>x.id),Array.from(D.ingredients,x=>x.id));
+assert.deepEqual(Array.from(B.orderedIngredients('specified'),x=>x.id),['Leek','Mushroom','Egg','Potato','Apple','Herb','Sausage','Milk','Honey','Oil','Ginger','Tomato','Cacao','Tail','Soybean','Corn','Coffee','Pumpkin','Avocado']);
+assert.equal(JSON.stringify(D.ingredients),masterBefore);
+const sorted=B.render({...options,layout:'compact',sort:'specified'});assert(sorted.indexOf('ふといながねぎの担当')<sorted.indexOf('とくせんリンゴの担当'));assert(!sorted.includes('ingredient-marker'));assert(!sorted.includes('<small>✓</small>'));
+console.log('PASS specified order, unchanged default/master, no compact selection-status markers');

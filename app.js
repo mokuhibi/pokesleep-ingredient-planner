@@ -4,6 +4,7 @@ const D=SleepData,C=SleepCore,$=id=>document.getElementById(id),TEST=new URLSear
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num=n=>n.toLocaleString('ja-JP',{minimumFractionDigits:1,maximumFractionDigits:1});
 const clone=x=>JSON.parse(JSON.stringify(x));
+let ingredientOrder='energy';
 const modifiers={speed:'おてつだいスピード',ingredient:'食材おてつだい確率',skill:'メインスキル発生確率',energy:'げんき回復量',exp:'EXP獲得量',neutral:'補正なし'};
 const ribbonNames=['なし','200時間以上','500時間以上','1,000時間以上','2,000時間以上'];
 const specialtyNames={ingredient:'食材とくい',berry:'きのみとくい',skill:'スキルとくい',all:'オール'};
@@ -34,13 +35,12 @@ function render(){
  renderBoard();renderMembers();renderCooking();renderSources();
 }
 function renderBoard(){
- const query=$('board-search').value.trim().toLowerCase();
- const list=D.ingredients.filter(i=>{const p=owner(i.id),a=state.assignments[i.id];return (!query||`${i.name} ${p?pokemonName(p)+' '+speciesName(p):''}`.toLowerCase().includes(query))&&(filter==='all'||filter==='assigned'&&!!p||filter==='complete'&&a?.complete||filter==='empty'&&!p);});
+ const list=D.ingredients.filter(i=>{const p=owner(i.id),a=state.assignments[i.id];return (filter==='all'||filter==='assigned'&&!!p||filter==='complete'&&a?.complete||filter==='empty'&&!p);});
  document.querySelectorAll('[data-layout]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.layout===boardLayout)));
  document.body.classList.toggle('compact-board',boardLayout==='compact'&&tab==='board');
  $('board-list').className=boardLayout==='compact'?'harvest-grid':'comparison-grid';
- $('board-list').innerHTML=BoardView.render({state,list,layout:boardLayout,slotsHTML,skillsHTML,levelLabel});
- $('board-view-note').textContent=boardLayout==='compact'?'全19食材を表示・検索対象は濃く表示':'担当個体を比較・同じ個体は1枚に集約';
+ $('board-list').innerHTML=BoardView.render({state,list,layout:boardLayout,sort:ingredientOrder,slotsHTML,skillsHTML,levelLabel});
+ $('board-view-note').textContent=boardLayout==='compact'?'全19食材を表示・担当の特徴を比較':'担当個体を比較・同じ個体は1枚に集約';
 }
 
 function renderMembers(){ $('member-list').innerHTML=state.pokemon.length?state.pokemon.map(p=>`<article class="member-card"><div class="member-card-top"><div><h3>${esc(pokemonName(p))}</h3><span class="member-specialty">${esc(speciesName(p))} · ${specialtyNames[C.species(p.species)?.specialty]||'未対応種族'}</span></div><span class="pill">Lv.${p.level}</span></div>${slotsHTML(p)}${skillsHTML(p)}${natureBadge(p)}<div class="member-assignment">担当：${D.ingredients.filter(i=>state.assignments[i.id]?.pokemonId===p.id).map(i=>esc(i.name)).join('・')||'未設定'}</div><button class="button wide" data-detail="${esc(p.id)}">詳細をみる</button></article>`).join(''):'<div class="empty-message" style="grid-column:1/-1"><div class="empty-symbol">☾</div><h3>最初の個体を記録しましょう。</h3><p>食材の並び、サブスキル、性格。未入力の項目はあとから追記できます。</p><button class="button primary" data-new>＋ 個体を登録</button></div>';}
@@ -104,7 +104,7 @@ async function exportOverview(){
  const canvas=document.createElement('canvas');canvas.width=1200;canvas.height=810;const t=canvasTools(canvas),ctx=canvas.getContext('2d');
  t.box(0,0,1200,810,'#f5f7ef',0);t.text('ねむりの食材手帳',30,43,26,'#294a39',600);t.text(`19食材の担当 / ${snapshot.mode==='current'?'現在のレベル':`Lv.${snapshot.mode}（現在Lv.を下げない）`} / ${new Date().toLocaleDateString('ja-JP')}`,30,74,14,'#65755f');
  for(let index=0;index<D.ingredients.length;index++){
- const ing=D.ingredients[index],a=snapshot.assignments[ing.id],p=snapshot.pokemon.find(p=>p.id===a?.pokemonId),x=30+(index%4)*290,y=95+Math.floor(index/4)*120;
+ const ing=BoardView.orderedIngredients(ingredientOrder)[index],a=snapshot.assignments[ing.id],p=snapshot.pokemon.find(p=>p.id===a?.pokemonId),x=30+(index%4)*290,y=95+Math.floor(index/4)*120;
  t.box(x,y,276,108,'#ffffff',10);t.text(ing.icon,x+9,y+25,18,'#294a39');t.text(a?.complete?'✓':p?'○':'',x+28,y+13,10,'#658655');
  if(!p){t.text('未登録',x+40,y+25,14,'#8a9585');continue;}
  t.text(pokemonName(p),x+40,y+25,14,'#35543d',600,143);
@@ -123,7 +123,7 @@ async function exportOverview(){
 }
 $('overview-export').onclick=exportOverview;
 $('detail-edit').onclick=()=>{$('detail').close();openEditor(detailId);};
-$('board-search').oninput=renderBoard;
+$('ingredient-order').onchange=()=>{ingredientOrder=$('ingredient-order').value;renderBoard();};
 $('evolution-mode').onchange=()=>commit({...state,evolution:$('evolution-mode').value});
 $('camp-mode').onchange=()=>commit({...state,camp:$('camp-mode').value==='on'});
 $('final-form-choices').addEventListener('change',e=>{const id=e.target.dataset.finalForm;if(!id)return;const finalForms={...state.finalForms};if(e.target.value)finalForms[id]=e.target.value;else delete finalForms[id];commit({...state,finalForms});});
