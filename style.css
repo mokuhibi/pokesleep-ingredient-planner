@@ -71,3 +71,5 @@ body{padding-bottom:calc(82px + env(safe-area-inset-bottom,0px))}.tabs{position:
 .skill-chip.locked{opacity:.65;border-style:dashed}
 
 .nature-field{grid-column:1/-1}#nature-description .nature-effect{width:100%}
+
+.compare-card .slot-name{min-height:28px}.compare-nature{min-height:22px}
