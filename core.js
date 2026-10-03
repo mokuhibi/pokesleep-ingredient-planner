@@ -6,12 +6,16 @@
 const D=root.SleepData, ING_LEVELS=[1,30,60], SKILL_LEVELS=[10,25,50,70,80];
 const lookup=(list,id)=>list.find(x=>x.id===id);
 const species=id=>lookup(D.pokemon,id), ingredient=id=>lookup(D.ingredients,id), nature=id=>lookup(D.natures,id), skill=id=>lookup(D.subskills,id);
+const berry=id=>lookup(D.berries,id);
 const effectiveLevel=(p,mode)=>mode==='current'?p.level:Math.max(p.level,Number(mode));
 const unlocked=(level,threshold)=>level>=threshold;
 function slotStatus(p,threshold,mode){return p.level>=threshold?'active':effectiveLevel(p,mode)>=threshold?'projected':'locked';}
 function finalSpecies(id,seen=new Set()){if(seen.has(id))return [];const sp=species(id);if(!sp)return [];const next=new Set(seen).add(id);return sp.evolvesInto?.length?[...new Set(sp.evolvesInto.flatMap(x=>finalSpecies(x,next)))]:[id];}
 function simulatedSpecies(p,options={}){if(options.evolution!=='final')return species(p.species);const choices=finalSpecies(p.species);const selected=options.finalForms?.[p.id];return species(choices.length===1?choices[0]:choices.includes(selected)?selected:'');}
 function calc(p,mode,energy,options={}){
+ return production(p,mode,energy,options,true);
+}
+function production(p,mode,energy,options,withIngredients){
  const level=effectiveLevel(p,mode),errors=[]; const sp=simulatedSpecies(p,options),n=nature(p.nature);
  if(!sp)errors.push(options.evolution==='final'&&species(p.species)?'最終進化先を選択してください':'種族を選択してください');
  if(sp?.calculationUnsupported)errors.push(sp.calculationUnsupported);
@@ -21,7 +25,7 @@ function calc(p,mode,energy,options={}){
  if(![0,20,50,70,100].includes(energy))errors.push('げんき条件が不正です');
  const activeSlots=ING_LEVELS.map((v,i)=>level>=v?i:null).filter(x=>x!==null);
  const activeSkills=SKILL_LEVELS.map((v,i)=>level>=v?i:null).filter(x=>x!==null);
- for(const i of activeSlots)if(!p.slots[i]||!sp?.slots[i].some(x=>x.id===p.slots[i])) errors.push(`食材${i+1}枠目を選択してください`);
+ if(withIngredients)for(const i of activeSlots)if(!p.slots[i]||!sp?.slots[i].some(x=>x.id===p.slots[i])) errors.push(`食材${i+1}枠目を選択してください`);
  for(const i of activeSkills)if(!skill(p.subskills[i]))errors.push(`Lv.${SKILL_LEVELS[i]}のサブスキルが未入力です`);
  if(sp?.remainingEvolutions>0&&p.ribbon===null)errors.push('おやすみリボンが未入力です');
  if(errors.length)return {ok:false,level,errors};
@@ -37,15 +41,29 @@ function calc(p,mode,energy,options={}){
  const energyFactor=energy>=80?.45:energy>=60?.52:energy>=40?.58:energy>=1?.66:1;
  const interval=baseInterval*energyFactor,helps=86400/interval;
  const counts=Object.fromEntries(D.ingredients.map(i=>[i.id,0]));
- for(const i of activeSlots){const s=sp.slots[i].find(x=>x.id===p.slots[i]);counts[s.id]+=helps*rate*s.amount/activeSlots.length;}
+ if(withIngredients)for(const i of activeSlots){const s=sp.slots[i].find(x=>x.id===p.slots[i]);counts[s.id]+=helps*rate*s.amount/activeSlots.length;}
  return {ok:true,level,calculationSpecies:sp.id,camp:!!options.camp,counts,interval,helps,rate,energyFactor,baseInterval};
+}
+// Neroli's Lab: berryPowerForLevel, calculateNrOfBerriesPerDrop,
+// calculateAverageProduce. Same normal-help conditions as ingredient estimates.
+function berryPower(id,level){const b=berry(id);return b&&Number.isInteger(level)&&level>=1&&level<=D.meta.calcCap?Math.round(Math.max(b.value+level-1,b.value*Math.pow(1.025,level-1))):null;}
+function calcBerry(p,mode,energy,options={},target=null){
+ const r=production(p,mode,energy,options,false);if(!r.ok)return r;
+ const sp=species(r.calculationSpecies),b=berry(sp.berry);
+ if(!b)return {ok:false,level:r.level,errors:['きのみの基礎データが未対応です']};
+ if(target&&b.id!==target)return {ok:false,level:r.level,errors:[`この条件では${b.name}を集めます。担当を選び直してください`]};
+ const finding=p.subskills.some((id,i)=>id==='BERRY_FINDING_S'&&r.level>=SKILL_LEVELS[i]);
+ const perDrop=(['berry','all'].includes(sp.specialty)?2:1)+(finding?1:0);
+ const count=r.helps*(1-r.rate)*perDrop,power=berryPower(b.id,r.level);
+ if(!Number.isFinite(count)||count<0||power===null)return {ok:false,level:r.level,errors:['きのみの計算条件が未対応です']};
+ return {...r,berryId:b.id,perDrop,count,power,berryEnergy:count*power};
 }
 function compare(state,recipe){return recipe.ingredients.map(x=>{
  const a=state.assignments[x.id],p=a&&state.pokemon.find(p=>p.id===a.pokemonId),result=p?calc(p,state.mode,state.energy,state):null;
  const quantity=result?.ok?result.counts[x.id]:null;
  return {...x,need:x.amount*3,pokemon:p,result,quantity,diff:quantity===null?null:quantity-x.amount*3};
 });}
-function emptyState(){return {schemaVersion:1,pokemon:[],assignments:{},mode:'current',energy:100,evolution:'current',camp:false,finalForms:{},recipeId:D.recipes[0].id,updatedAt:null};}
+function emptyState(){return {schemaVersion:1,pokemon:[],assignments:{},berryAssignments:{},mode:'current',energy:100,evolution:'current',camp:false,finalForms:{},recipeId:D.recipes[0].id,updatedAt:null};}
 function validateState(input){
  const fail=m=>{throw new Error(m);};
  if(!input||typeof input!=='object'||input.schemaVersion!==1)fail('対応していないバックアップ形式です');
@@ -74,6 +92,12 @@ function validateState(input){
   if(a.completedAt!==null&&(!text(a.completedAt,40)||Number.isNaN(Date.parse(a.completedAt))))fail('完了日が不正です');
   state.assignments[id]={pokemonId:a.pokemonId,complete:a.complete,note:a.note,completedAt:a.completedAt};
  }
+ const berryAssignments=input.berryAssignments===undefined?{}:input.berryAssignments;
+ if(!berryAssignments||typeof berryAssignments!=='object'||Array.isArray(berryAssignments))fail('きのみ担当データが不正です');
+ for(const [id,a] of Object.entries(berryAssignments)){
+  if(!berry(id)||!a||!ids.has(a.pokemonId))fail('きのみ担当データの参照が不正です');
+  state.berryAssignments[id]={pokemonId:a.pokemonId};
+ }
  if(!['current','50','60','70','80'].includes(input.mode))fail('表示レベルが不正です');
  if(![0,20,50,70,100].includes(input.energy))fail('計算条件が不正です');
  if(!lookup(D.recipes,input.recipeId))fail('料理が不正です');
@@ -85,5 +109,5 @@ function validateState(input){
  state.mode=input.mode;state.energy=input.energy;state.recipeId=input.recipeId;state.updatedAt=typeof input.updatedAt==='string'?input.updatedAt:null;
  return state;
 }
-root.SleepCore={ING_LEVELS,SKILL_LEVELS,species,ingredient,nature,skill,effectiveLevel,unlocked,slotStatus,finalSpecies,simulatedSpecies,calc,compare,emptyState,validateState};
+root.SleepCore={ING_LEVELS,SKILL_LEVELS,species,ingredient,berry,nature,skill,effectiveLevel,unlocked,slotStatus,finalSpecies,simulatedSpecies,calc,berryPower,calcBerry,compare,emptyState,validateState};
 })(globalThis);

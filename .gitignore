@@ -26,3 +26,6 @@ __pycache__/
 
 # Reviewed display assets only; personal images remain excluded
 !assets/pokemon/*.png
+
+# Reviewed berry display assets only
+!assets/berries/*.png
