@@ -32,3 +32,16 @@ console.log('PASS specified order, unchanged default/master, no compact selectio
 
 const ownTotals=B.render({...options,layout:'compact'}).match(/<div class="compact-yield"[^>]*>(.*?)<\/div>/g);assert.equal(ownTotals.length,2);assert(ownTotals[0].includes('🥩'));assert(!ownTotals[0].includes('🫚'));assert(ownTotals[1].includes('🫚'));assert(!ownTotals[1].includes('🥩'));assert(!B.render({...options,state:{...s,evolution:'final'},layout:'compact'}).includes('assumed-form'));
 console.log('PASS target-only totals, no additional final species label, projected skills retain status without arrows');
+
+// Compare the same coordinates across different ownership, levels and missing information.
+const skillOrder=html=>Array.from(html.matchAll(/data-skill="([^"]+)"/g),m=>m[1]);
+const fullSkills=B.skills(p,'current'),unknownSkills=B.skills({...p,subskills:['','','','','']},'70');
+assert.deepEqual(skillOrder(fullSkills),skillOrder(unknownSkills));assert.equal(skillOrder(fullSkills).length,9);
+assert(fullSkills.includes('rarity-gold owned locked'));assert(fullSkills.includes('rarity-silver owned active'));assert(fullSkills.includes('rarity-white owned active'));
+assert(fullSkills.includes('未所持'));assert(!unknownSkills.includes('未所持'));assert(unknownSkills.includes('未確認'));
+assert(B.skills(p,'70').includes('rarity-gold owned projected'));assert(B.nature({...p,nature:'BASHFUL'},true).includes('class="mini-nature"'));
+const pre={...p,species:'CHARMANDER',nickname:'そのまま',slots:['Sausage','Ginger','Herb']},preBefore=JSON.stringify(pre);
+assert.equal(B.displaySpecies(pre,{evolution:'current'}),'ヒトカゲ');assert.equal(B.displaySpecies(pre,{evolution:'final',finalForms:{}}),'リザードン');
+const evolved=B.identity(pre,{mode:'70',evolution:'final',finalForms:{}});assert(evolved.includes('リザードン'));assert(evolved.includes('そのまま'));assert.equal(JSON.stringify(pre),preBefore);
+assert.equal(B.displaySpecies({...pre,species:'EEVEE'},{evolution:'final',finalForms:{}}),'進化先未選択');
+console.log('PASS fixed rarity/ownership coordinates, unknown distinct from absent, projected badges, neutral nature slot, evolved display and unchanged nickname/data');
