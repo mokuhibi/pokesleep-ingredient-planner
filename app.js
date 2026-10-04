@@ -25,7 +25,7 @@ function skillsHTML(p,all=false){const list=p.subskills.map((id,i)=>({id,i,s:C.s
 function levelLabel(p){const l=C.effectiveLevel(p,state.mode);return state.mode==='current'?`現在 Lv.${p.level}`:`現在 ${p.level} → 計算 Lv.${l}${l>D.meta.calcCap?'（将来）':''}`;}
 function ingredientLabel(ing,p){return `<div class="ingredient-label"><span class="ingredient-icon" aria-hidden="true">${ing.icon}</span><div><h3>${esc(ing.name)}</h3>${p?`<button class="text-button" data-detail="${esc(p.id)}">${esc(pokemonName(p))}</button><span class="level-text">${levelLabel(p)}</span>`:'<span class="level-text">担当未登録</span>'}</div></div>`;}
 function simulationLabel(s=state){return `${s.evolution==='final'?'最終進化想定':'現在の姿'}・キャンプ${s.camp?'ON':'OFF'}`;}
-function renderSimulation(){ $('evolution-mode').value=state.evolution;$('camp-mode').value=state.camp?'on':'off';const branches=state.evolution==='final'?state.pokemon.filter(p=>C.finalSpecies(p.species).length>1):[];$('final-form-choices').hidden=!branches.length;$('final-form-choices').innerHTML=branches.map(p=>`<label>${esc(pokemonName(p))}の最終進化先<select data-final-form="${esc(p.id)}"><option value="">選択してください</option>${C.finalSpecies(p.species).map(id=>`<option value="${esc(id)}" ${state.finalForms[p.id]===id?'selected':''}>${esc(C.species(id).name)}</option>`).join('')}</select></label>`).join('');}
+function renderSimulation(){ $('evolution-mode').checked=state.evolution==='final';$('camp-mode').checked=state.camp;const branches=state.evolution==='final'?state.pokemon.filter(p=>C.finalSpecies(p.species).length>1):[];$('final-form-choices').hidden=!branches.length;$('final-form-choices').innerHTML=branches.map(p=>`<label>${esc(pokemonName(p))}の最終進化先<select data-final-form="${esc(p.id)}"><option value="">選択してください</option>${C.finalSpecies(p.species).map(id=>`<option value="${esc(id)}" ${state.finalForms[p.id]===id?'selected':''}>${esc(C.species(id).name)}</option>`).join('')}</select></label>`).join('');}
 function render(){
  renderSimulation();
  $('member-count').textContent=state.pokemon.length;
@@ -165,17 +165,17 @@ function showOverview(canvas,blob,kind){
  preview.append(actions,info);open('overview-dialog');
 }
 async function exportOverview(kind='ingredient'){
- const snapshot=clone(state),sort=clone(viewOptions[kind==='berry'?'berries':'board']),button=$(kind==='berry'?'berries-share':'board-share'),oldText=button.textContent;button.disabled=true;button.textContent='作成中…';
+ const snapshot=clone(state),sort=clone(viewOptions[kind==='berry'?'berries':'board']),button=$('share-open'),oldText=button.textContent;button.disabled=true;button.textContent='作成中…';
  try{
  const canvas=await compactOverviewCanvas(snapshot,sort,kind);
  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!blob)throw new Error('画像を生成できませんでした');showOverview(canvas,blob,kind);
  }catch{toast('画像を作成できませんでした。もう一度お試しください');}finally{button.disabled=false;button.textContent=oldText;}
 }
-$('board-share').onclick=()=>exportOverview('ingredient');$('berries-share').onclick=()=>exportOverview('berry');
+
 $('detail-edit').onclick=()=>{$('detail').close();openEditor(detailId);};
 for(const view of ['board','berries']){for(const [suffix,key] of [['order','by'],['direction','direction']])$(view+'-'+suffix).onchange=()=>{viewOptions[view][key]=$(view+'-'+suffix).value;view==='board'?renderBoard():renderBerries();};}
-$('evolution-mode').onchange=()=>commit({...state,evolution:$('evolution-mode').value});
-$('camp-mode').onchange=()=>commit({...state,camp:$('camp-mode').value==='on'});
+$('evolution-mode').onchange=()=>commit({...state,evolution:$('evolution-mode').checked?'final':'current'});
+$('camp-mode').onchange=()=>commit({...state,camp:$('camp-mode').checked});
 $('final-form-choices').addEventListener('change',e=>{const id=e.target.dataset.finalForm;if(!id)return;const finalForms={...state.finalForms};if(e.target.value)finalForms[id]=e.target.value;else delete finalForms[id];commit({...state,finalForms});});
 $('condition-open').onclick=()=>{$('energy-select').value=state.energy;open('conditions');};
 $('conditions-save').onclick=()=>{if(commit({...state,energy:Number($('energy-select').value)},'比較条件を更新しました'))$('conditions').close();};

@@ -45,3 +45,5 @@ assert.equal(BoardView.targetList('berry',s,{filter:'assigned'}).length,1);asser
 assert.equal((BerryView.render(s,{filter:'assigned'}).match(/<article/g)||[]).length,1);
 for(const b of D.berries)assert(html.includes('type-'+b.type));
 console.log('PASS base-energy sorting with stable ties, berry filters and shared type classes');
+
+const noFoodNature=BerryView.render({...s,pokemon:[{...p,nature:'QUIET'}]});assert(!noFoodNature.includes('食↑'));assert(noFoodNature.includes('―'));

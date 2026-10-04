@@ -11,7 +11,7 @@ assert(B.skills(p,'current').includes('·おてボ'));assert(!B.skills(p,'70').i
 assert.equal(B.time(3661),'1:01:01');console.log('PASS 19 tiles, unique individuals, no data mutation, escaped labels, nature directions, unlock states, time formatting');
 const current=B.render({...options,layout:'compact'});assert(!current.includes('<img'));assert(!current.includes('portrait'));assert(current.includes('Lv.60'));assert(current.includes('1日'));assert(current.includes(C.calc(p,'current',100).counts.Sausage.toFixed(1)));const duplicate={...p,nature:'BASHFUL',slots:['Sausage','Sausage','Sausage']};const yieldData=B.daily(duplicate,'current',100);assert.equal(yieldData.items.length,1);assert.equal(yieldData.items[0][1],C.calc(duplicate,'current',100).counts.Sausage);assert.equal(B.daily(p,'80',100).items.length,0);assert(!B.nature({...p,nature:'BASHFUL'},true).includes('食速±'));console.log('PASS text-only compact view, level, daily counts, duplicate ingredient totals, future unknown, nature abbreviations');
 const visible=compact.replace(/<[^>]*>/g,'');
-for(const ing of D.ingredients)assert(!visible.includes(ing.name),'ingredient names must remain in accessible labels only');
+for(const ing of D.ingredients)assert(visible.includes(ing.name),'every ingredient name must be visible');
 assert.equal((compact.match(/class="compact-row compact-identity"/g)||[]).length,2);
 assert(compact.indexOf('compact-yield')<compact.indexOf('compact-identity'));assert(compact.indexOf('compact-identity')<compact.indexOf('mini-skills'));
 assert.equal((compact.match(/class="compact-yield"/g)||[]).length,2);
@@ -19,10 +19,10 @@ assert(!visible.includes('1日'));assert(visible.includes('Lv.60'));
 console.log('PASS compact row structure, icon-only ingredients, visible effective level and no redundant daily label');
 for(const [slots,expected] of [[['Sausage','Sausage','Sausage'],'AAA'],[['Sausage','Sausage','Ginger'],'AAB'],[['Sausage','Ginger','Sausage'],'ABA'],[['Sausage','Sausage','Herb'],'AAC'],[['Sausage','','Herb'],'A?C']])assert.equal(B.slotLetters({...p,slots}).join(''),expected);
 assert.equal(B.slotLetters({...p,species:''}).join(''),'???');
-assert(B.render({...options,layout:'compact'}).includes('letter-slots'));
+assert(!B.render({...options,layout:'compact'}).includes('letter-slots'));assert(B.render({...options}).includes('mini-slots'));
 console.log('PASS species-based letters including AAC, missing slots and unknown species');
 
-assert.equal((B.render({...options,list:[],layout:"compact"}).match(/<article/g)||[]).length,19);assert(compact.indexOf("letter-slots")<compact.indexOf("mini-nature"));
+assert.equal((B.render({...options,list:[],layout:"compact"}).match(/<article/g)||[]).length,19);assert(compact.indexOf("mini-slots")<compact.indexOf("mini-nature"));
 const masterBefore=JSON.stringify(D.ingredients);
 assert.deepEqual(Array.from(B.orderedIngredients('energy'),x=>x.id),Array.from(D.ingredients,x=>x.id));
 assert.deepEqual(Array.from(B.orderedIngredients('specified'),x=>x.id),['Leek','Mushroom','Egg','Potato','Apple','Herb','Sausage','Milk','Honey','Oil','Ginger','Tomato','Cacao','Tail','Soybean','Corn','Coffee','Pumpkin','Avocado']);
@@ -30,7 +30,7 @@ assert.equal(JSON.stringify(D.ingredients),masterBefore);
 const sorted=B.render({...options,layout:'compact',sort:'specified'});assert(sorted.indexOf('ふといながねぎの担当')<sorted.indexOf('とくせんリンゴの担当'));assert(!sorted.includes('ingredient-marker'));assert(!sorted.includes('<small>✓</small>'));
 console.log('PASS specified order, unchanged default/master, no compact selection-status markers');
 
-const ownTotals=B.render({...options,layout:'compact'}).match(/<div class="compact-yield"[^>]*>(.*?)<\/div>/g);assert.equal(ownTotals.length,2);assert(ownTotals[0].includes('🥩'));assert(!ownTotals[0].includes('🫚'));assert(ownTotals[1].includes('🫚'));assert(!ownTotals[1].includes('🥩'));assert(!B.render({...options,state:{...s,evolution:'final'},layout:'compact'}).includes('assumed-form'));
+const ownTotals=B.render({...options,layout:'compact'}).match(/<div class="compact-yield"[^>]*>(.*?)<\/div>/g);assert.equal(ownTotals.length,2);assert(ownTotals[0].includes(C.calc(p,'current',100).counts.Sausage.toFixed(1)));assert(!ownTotals[0].includes(C.calc(p,'current',100).counts.Ginger.toFixed(1)));assert(ownTotals[1].includes(C.calc(p,'current',100).counts.Ginger.toFixed(1)));assert(!ownTotals[1].includes(C.calc(p,'current',100).counts.Sausage.toFixed(1)));assert(!B.render({...options,state:{...s,evolution:'final'},layout:'compact'}).includes('assumed-form'));
 console.log('PASS target-only totals, no additional final species label, projected skills retain status without arrows');
 
 // Compare the same coordinates across different ownership, levels and missing information.
@@ -60,3 +60,8 @@ assert.deepEqual(Array.from(B.targetList('ingredient',s,{by:'energy',direction:'
 assert.equal((B.render({...options,items:B.targetList('ingredient',s,{filter:'assigned'})}).match(/<article/g)||[]).length,2);
 assert.equal(JSON.stringify(s),sortSnapshot);assert.equal(JSON.stringify(D.ingredients),masterSnapshot);
 console.log('PASS actual assignment filters, adopted energy order/reverse, no mutation');
+
+assert(!compact.includes('食材並び ABC'));assert(!compact.includes('letter-slots'));
+assert(B.miniSlots({...p,slots:['Sausage','Sausage','Herb']},'current',false).includes('🥩'));assert(!B.miniSlots(p,'70',false).includes('<sup>'));
+assert(B.nature({...p,nature:'QUIET'},true,'berry').includes('―'));assert(!B.nature({...p,nature:'QUIET'},true,'berry').includes('食↑'));assert(B.nature({...p,nature:'BRAVE'},true,'berry').includes('速↑'));
+console.log('PASS actual slot icons without letters/markers, target-only yield, berry-only speed nature and neutral frame');
