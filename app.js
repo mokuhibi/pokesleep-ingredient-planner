@@ -4,17 +4,17 @@ const D=SleepData,C=SleepCore,$=id=>document.getElementById(id),TEST=new URLSear
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const num=n=>n.toLocaleString('ja-JP',{minimumFractionDigits:1,maximumFractionDigits:1});
 const clone=x=>JSON.parse(JSON.stringify(x));
-let ingredientOrder='energy';
+const viewOptions={board:{by:'default',direction:'asc',filter:'all'},berries:{by:'default',direction:'asc',filter:'all'}};
 const modifiers={speed:'おてつだいスピード',ingredient:'食材おてつだい確率',skill:'メインスキル発生確率',energy:'げんき回復量',exp:'EXP獲得量',neutral:'補正なし'};
 const ribbonNames=['なし','200時間以上','500時間以上','1,000時間以上','2,000時間以上'];
 const specialtyNames={ingredient:'食材とくい',berry:'きのみとくい',skill:'スキルとくい',all:'オール'};
-let state=C.emptyState(),filter='all',tab='board',editingSpecies='',activeAssignment='',activeBerryAssignment='',editorBerryContext=null,detailId='',importCandidate=null,blockedRaw=null;
+let state=C.emptyState(),tab='board',editingSpecies='',activeAssignment='',activeBerryAssignment='',editorBerryContext=null,detailId='',importCandidate=null,blockedRaw=null;
 function toast(message){$('toast').textContent=message;$('toast').classList.add('show');clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').classList.remove('show'),3200);}
 function load(){try{const raw=localStorage.getItem(KEY);if(raw){try{state=C.autoAssign(C.validateState(JSON.parse(raw)));}catch(e){blockedRaw=raw;$('storage-warning').hidden=false;$('storage-warning').innerHTML=`保存データを読み込めませんでした。元データは保持されています。保存前にバックアップしてください。 <button class="button" id="recover-raw">元データを書き出す</button> <button class="button" id="reset-corrupt">初期化する</button>`;$('recover-raw').onclick=()=>downloadBlob(new Blob([blockedRaw],{type:'application/json'}),'sleep-recovery.json');$('reset-corrupt').onclick=()=>{if(confirm('元データをバックアップしましたか？現在の保存データを初期化します。')){try{localStorage.removeItem(KEY);blockedRaw=null;$('storage-warning').hidden=true;state=C.emptyState();render();}catch{toast('保存領域を初期化できませんでした');}}};}}}catch{storageWarning('ブラウザの保存機能が利用できません。変更は保存できないため、保存を許可してから利用してください。');}}
 function storageWarning(message){$('storage-warning').hidden=false;$('storage-warning').textContent=message;}
 function commit(next,message){if(blockedRaw!==null){toast('元データの書き出し・初期化、またはバックアップからの復元が必要です');return false;}try{const valid=C.autoAssign(C.validateState(next));valid.updatedAt=new Date().toISOString();localStorage.setItem(KEY,JSON.stringify(valid));state=valid;render();if(message)toast(message);return true;}catch(e){toast('保存できませんでした：'+e.message);return false;}}
 function open(id){$(id).showModal();}
-function showTab(name){tab=name;document.querySelectorAll('.view').forEach(x=>x.hidden=x.id!=='view-'+name);document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));if(name==='cooking')renderCooking();document.body.classList.toggle('compact-board',name==='board');}
+function showTab(name){tab=name;document.querySelectorAll('.view').forEach(x=>x.hidden=x.id!=='view-'+name);document.querySelectorAll('[data-tab]').forEach(x=>x.classList.toggle('active',x.dataset.tab===name));if(name==='cooking')renderCooking();document.body.classList.toggle('compact-board',['board','berries','members'].includes(name));}
 const pokemonName=p=>p.nickname||C.species(p.species)?.name||p.customName||'未入力';
 const speciesName=p=>C.species(p.species)?.name||p.customName||'種族未入力';
 const owner=id=>state.pokemon.find(p=>p.id===state.assignments[id]?.pokemonId);
@@ -33,7 +33,7 @@ function render(){
  $('save-status').textContent=state.updatedAt?'保存済み '+new Date(state.updatedAt).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'未登録';
  renderBoard();renderBerries();renderMembers();renderCooking();renderSources();
 }
-function renderBerries(){$('berry-list').innerHTML=BerryView.render(state);}
+function renderBerries(){renderTargetHeader('berries','berry');$('berry-list').innerHTML=BerryView.render(state,viewOptions.berries);}
 function openBerryAssignment(id,registeredId=null){
  activeBerryAssignment=id;const b=C.berry(id),assigned=state.berryAssignments[id]?.pokemonId;
  $('berry-assignment-title').textContent=b.name+'の担当';
@@ -53,15 +53,18 @@ function updateBerryHint(){
 $('berry-assignment-select').onchange=updateBerryHint;
 $('berry-assignment-new').onclick=()=>{const id=activeBerryAssignment;$('berry-assignment-dialog').close();openEditor(null,null,id);};
 $('berry-assignment-save').onclick=()=>$('berry-assignment-dialog').close();
-function renderBoard(){
- const list=D.ingredients.filter(i=>{const p=owner(i.id),a=state.assignments[i.id];return (filter==='all'||filter==='assigned'&&!!p||filter==='complete'&&a?.complete||filter==='empty'&&!p);});
- document.body.classList.toggle('compact-board',tab==='board');
- $('board-list').className='harvest-grid';
- $('board-list').innerHTML=BoardView.render({state,list,sort:ingredientOrder,slotsHTML,skillsHTML,levelLabel});
- $('board-view-note').textContent='計算可能な食材とくいから自動選出';
+function renderTargetHeader(view,kind){
+ const total=kind==='berry'?D.berries.length:D.ingredients.length;
+ $(view+'-count').textContent=BoardView.targetList(kind,state,{filter:'assigned'}).length+' / '+total;
+ document.querySelectorAll(`[data-target-kind="${view}"]`).forEach(b=>b.classList.toggle('selected',b.dataset.targetFilter===viewOptions[view].filter));
 }
-
-function renderMembers(){ $('member-list').innerHTML=state.pokemon.length?state.pokemon.map(p=>`<article class="member-card"><div class="member-card-top">${BoardView.identity(p,state)}</div><span class="member-specialty">${specialtyNames[C.simulatedSpecies(p,state)?.specialty]||'未対応種族'}</span>${slotsHTML(p)}${BoardView.skills(p,state.mode,'individual')}<div class="member-assignment">担当：${D.ingredients.filter(i=>state.assignments[i.id]?.pokemonId===p.id).map(i=>esc(i.name)).join('・')||'未設定'}</div><button class="button wide" data-detail="${esc(p.id)}">詳細をみる</button></article>`).join(''):'<div class="empty-message" style="grid-column:1/-1"><div class="empty-symbol">☾</div><h3>最初の個体を記録しましょう。</h3><p>食材の並び、サブスキル、性格。未入力の項目はあとから追記できます。</p><button class="button primary" data-new>＋ 個体を登録</button></div>';}
+function renderBoard(){
+ renderTargetHeader('board','ingredient');document.body.classList.toggle('compact-board',['board','berries','members'].includes(tab));
+ $('board-list').innerHTML=BoardView.render({state,items:BoardView.targetList('ingredient',state,viewOptions.board)});
+}
+function renderMembers(){
+ $('member-list').innerHTML=state.pokemon.length?state.pokemon.map(p=>`<article class="harvest-tile member-card"><div class="member-meta"><span>${esc(specialtyNames[C.species(p.species)?.specialty]||'種族未入力')}</span><span title="現在の登録レベル">現在Lv.${p.level}</span></div>${BoardView.identity(p,state)}<div class="member-foods">${BoardView.miniSlots(p,state.mode)}<b class="letter-slots">${BoardView.slotLetters(p).join('')}</b></div><div class="member-owned-skills">${p.subskills.map((id,i)=>{const sk=C.skill(id);return `<span class="mini-skill ${sk?'owned':''} rarity-${sk?.rarity||'white'} ${C.slotStatus(p,C.SKILL_LEVELS[i],state.mode)}" title="${esc(sk?.name||'未入力')} / Lv.${C.SKILL_LEVELS[i]}"><small>${C.SKILL_LEVELS[i]}</small> ${esc(BoardView.short[id]||sk?.name||'―')}</span>`;}).join('')}</div><button class="button member-detail" data-detail="${esc(p.id)}">詳細</button></article>`).join(''):'<div class="empty-message" style="grid-column:1/-1"><h3>最初の個体を記録しましょう。</h3><button class="button primary" data-new>個体を登録</button></div>';
+}
 function renderCooking(){const recipe=D.recipes.find(r=>r.id===state.recipeId);$('recipe-category').value=recipe.category;$('recipe-select').innerHTML=D.recipes.filter(r=>r.category===recipe.category).map(r=>`<option value="${r.id}" ${r.id===recipe.id?'selected':''}>${esc(r.name)}</option>`).join('');$('recipe-total').textContent=recipe.ingredients.reduce((a,b)=>a+b.amount*3,0);
  $('comparison').innerHTML=`<div class="table-scroll"><table class="comparison-table"><thead><tr><th>食材 / 担当</th><th>3食分の必要数</th><th>推定収集数 / 日</th><th>条件上の過不足</th><th></th></tr></thead><tbody>${C.compare(state,recipe).map(x=>`<tr><td>${ingredientLabel(C.ingredient(x.id),x.pokemon)}</td><td>${x.need}<small class="muted"> 個</small></td><td>${x.quantity===null?'—':num(x.quantity)}<div class="quantity-note">${x.result&&!x.result.ok?esc(x.result.errors[0]):!x.pokemon?'担当未登録':'通常おてつだいのみ'}</div></td><td class="${x.diff===null?'muted':x.diff>=0?'positive':'negative'}">${x.diff===null?'未計算':`${x.diff>=0?'+':''}${num(x.diff)} 個`} ${x.diff===null?'':x.diff>=0?'余裕':'不足'}${x.diff===null?'':`<div class="bar"><span style="width:${Math.min(100,x.quantity/x.need*100)}%"></span></div>`}</td><td><button class="button" data-assign="${x.id}">担当</button></td></tr>`).join('')}</tbody></table></div><p class="footnote">料理データ：Neroli’s Lab ${esc(D.meta.version)}。料理名は日本語表記を照合済みです。料理レベルによるエナジーは比較しません。</p>`;
 }
@@ -96,7 +99,7 @@ function updateAssignmentHint(){const id=$('assignment-select').value,p=state.po
 function saveAssignment(){const next=clone(state),id=$('assignment-select').value,a=state.assignments[activeAssignment],complete=$('assignment-complete').checked;if(id)next.assignments[activeAssignment]={pokemonId:id,complete,note:$('assignment-note').value.trim(),completedAt:complete?(a?.pokemonId===id&&a?.complete?a.completedAt:new Date().toISOString()):null};else delete next.assignments[activeAssignment];if(commit(next,'担当を保存しました'))$('assignment-dialog').close();}
 function openDetail(id){detailId=id;const p=state.pokemon.find(p=>p.id===id),r=C.calc(p,state.mode,state.energy,state);$('detail-content').innerHTML=`<div class="detail-summary"><div><h3>${esc(pokemonName(p))}</h3><p class="muted small">${esc(speciesName(p))} · ${levelLabel(p)}</p></div>${slotsHTML(p)}</div><div class="detail-grid"><section><h3>すべてのサブスキル</h3>${skillsHTML(p,true)}</section><section><h3>性格：${esc(C.nature(p.nature)?.name||'未入力')}</h3><p class="small">${esc(natureDescription(p.nature))}</p><p class="small muted">リボン：${p.ribbon===null?'未入力':ribbonNames[p.ribbon]}<br>最大所持数：${p.carry??'未入力'}<br>メインスキルLv.：${p.mainSkillLevel??'未入力'}</p></section></div><h3>通常おてつだいの推定収集数 / 24時間</h3>${r.ok?`<div class="all-counts">${D.ingredients.filter(i=>r.counts[i.id]>0).map(i=>`<span class="count-chip">${i.icon} ${esc(i.name)} <b>${num(r.counts[i.id])}</b> 個</span>`).join('')}</div><p class="small muted">${simulationLabel()}・計算種族 ${esc(C.species(r.calculationSpecies)?.name||speciesName(p))}・計算Lv.${r.level}・げんき${state.energy}固定・満杯前回収・スキル効果を除外</p><details><summary class="small">計算の内訳</summary><p class="small">基礎おてつだい間隔 ${C.species(r.calculationSpecies).frequency}秒 → 補正・丸め後 ${r.baseInterval}秒 → げんき反映 ${num(r.interval)}秒<br>期待おてつだい回数 ${num(r.helps)}回 / 食材確率 ${num(r.rate*100)}%<br>データ ${D.meta.version} / 計算 ${D.meta.calcVersion}</p></details>`:`<div class="notice">${r.errors.map(esc).join('<br>')}</div>`}<h3>個体メモ</h3><p class="detail-memo">${esc(p.memo||'メモはありません。')}</p><h3>担当と厳選状況</h3>${D.ingredients.filter(i=>state.assignments[i.id]?.pokemonId===p.id).map(i=>{const a=state.assignments[i.id];return `<p class="small">${i.icon} ${esc(i.name)} · ${a.complete?'✓ 厳選完了':'厳選中'}${a.completedAt?' · '+new Date(a.completedAt).toLocaleDateString('ja-JP'):''}<br>${esc(a.note)}</p>`;}).join('')||'<p class="small muted">担当未設定</p>'}`;open('detail');}
 function downloadBlob(blob,name){const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);}
-function exportBackup(){const bundle={...state,exportMeta:{exportedAt:new Date().toISOString(),dataVersion:D.meta.version,calcVersion:D.meta.calcVersion}};downloadBlob(new Blob([JSON.stringify(bundle,null,2)],{type:'application/json'}),'ねむりの食材手帳-'+new Date().toISOString().slice(0,10)+'.json');toast('バックアップを書き出しました');}
+function exportBackup(){const bundle={...state,exportMeta:{exportedAt:new Date().toISOString(),dataVersion:D.meta.version,calcVersion:D.meta.calcVersion}};downloadBlob(new Blob([JSON.stringify(bundle,null,2)],{type:'application/json'}),'ねむりの厳選手帳-'+new Date().toISOString().slice(0,10)+'.json');toast('バックアップを書き出しました');}
 async function importBackup(){const file=$('import-backup').files[0];$('backup-error').textContent='';$('import-preview').innerHTML='';importCandidate=null;if(!file)return;if(file.size>8*1024*1024){$('backup-error').textContent='8MB以下のバックアップを選んでください';return;}try{importCandidate=C.validateState(JSON.parse(await file.text()));$('import-preview').innerHTML=`<p>個体 ${importCandidate.pokemon.length}体・担当 ${Object.keys(importCandidate.assignments).length}食材・きのみ担当 ${Object.keys(importCandidate.berryAssignments).length}件を読み込みました。現在のデータを置き換えます。</p><button class="button primary" id="confirm-import">この内容で復元する</button>`;$('confirm-import').onclick=()=>{const wasBlocked=blockedRaw;blockedRaw=null;if(commit(importCandidate,'バックアップを復元しました')){$('storage-warning').hidden=true;$('backup').close();importCandidate=null;}else blockedRaw=wasBlocked;};}catch(e){$('backup-error').textContent='復元できません：'+e.message;}}
 $('pokemon-nature').innerHTML='<option value="">未入力</option>'+D.natures.map(n=>`<option value="${n.id}">${esc(n.name)}（${n.positiveModifier==='neutral'?'補正なし':`↑ ${esc(modifiers[n.positiveModifier])} ／ ↓ ${esc(modifiers[n.negativeModifier])}`}）</option>`).join('');
 function renderNatureDescription(id){const n=C.nature(id);$('nature-description').innerHTML=!n?'未入力':n.positiveModifier==='neutral'?'<span class="nature-neutral">補正なし</span>':`<span class="nature-effect up">↑ ${esc(modifiers[n.positiveModifier])}</span><span class="nature-effect down">↓ ${esc(modifiers[n.negativeModifier])}</span>`;}
@@ -121,7 +124,7 @@ $('editor').addEventListener('close',()=>{hideSpecies();const context=editorBerr
 
 $('pokemon-form').addEventListener('submit',savePokemon);
 $('delete-pokemon').onclick=()=>{const id=$('pokemon-id').value;if(!confirm('この個体と、この個体に紐づく担当設定を削除しますか？'))return;const next=C.removePokemon(state,id);if(commit(next,'個体を削除しました'))$('editor').close();};
-$('add-pokemon').onclick=$('add-member').onclick=()=>openEditor();
+$('board-register').onclick=$('berries-register').onclick=$('add-member').onclick=()=>openEditor();
 async function compactOverviewCanvas(snapshot,sort,kind='ingredient'){
  // Use the exact board component and app stylesheet in a 1200px viewport.
  // The iframe prevents a phone's media queries from changing the four-column image.
@@ -133,11 +136,11 @@ async function compactOverviewCanvas(snapshot,sort,kind='ingredient'){
  try{
  await ready;const doc=frame.contentDocument,body=doc.body;
  const subtitle=doc.createElement('p');subtitle.className='export-subtitle';subtitle.textContent=`想定レベル：${snapshot.mode==='current'?'現在':`Lv.${snapshot.mode}`} ｜ いいキャンプ ${snapshot.camp?'ON':'OFF'} ｜ 最終進化 ${snapshot.evolution==='final'?'ON':'OFF'}`;body.append(subtitle);
- const grid=doc.createElement('div');grid.className='harvest-grid';grid.innerHTML=kind==='berry'?BerryView.render(snapshot):BoardView.render({state:snapshot,list:D.ingredients,layout:'compact',sort});body.append(grid);
- const levels=(kind==='berry'?D.berries:BoardView.orderedIngredients(sort)).flatMap(i=>{const p=snapshot.pokemon.find(p=>p.id===(kind==='berry'?snapshot.berryAssignments:snapshot.assignments)[i.id]?.pokemonId);return p?[`${i.name} Lv.${C.effectiveLevel(p,snapshot.mode)}`]:[];});
+ const grid=doc.createElement('div');grid.className='harvest-grid';grid.innerHTML=kind==='berry'?BerryView.render(snapshot,{...sort,filter:'all'}):BoardView.render({state:snapshot,items:BoardView.targetList('ingredient',snapshot,{...sort,filter:'all'})});body.append(grid);
+ const levels=BoardView.targetList(kind,snapshot,{...sort,filter:'all'}).flatMap(i=>{const p=snapshot.pokemon.find(p=>p.id===(kind==='berry'?snapshot.berryAssignments:snapshot.assignments)[i.id]?.pokemonId);return p?[`${i.name} Lv.${C.effectiveLevel(p,snapshot.mode)}`]:[];});
  const note=doc.createElement('p');note.className='export-footnote';note.textContent=`計算レベル：${levels.join(' / ')||'担当未登録'}
 食＝食材確率 / 速＝速度（性格） / 所持＝最大所持数 / おてボ＝ボーナス / おてスピ＝速度 / きのみS＝きのみの数S
-並び順：${kind==='berry'?'きのみマスター順':sort==='specified'?'指定順':'エナジー順'}
+並び順：${sort.by==='energy'?'エナジー':'デフォルト'}・${sort.direction==='desc'?'降順':'昇順'}
 色付き＝所持 / 薄灰＝未所持 / ?＝未確認 / 点線・·＝未解放 / 試＝想定で解放
 通常おてつだい24時間・げんき${snapshot.energy}固定・満杯前回収・本人補正とリボン・他個体/スキル/イベント等なし
 各担当を個別に稼働した期待値。実チームで3食作れる保証ではありません。Lv.80は将来試算・日量未計算。
@@ -149,9 +152,9 @@ async function compactOverviewCanvas(snapshot,sort,kind='ingredient'){
 }
 let overviewObjectURL=null;
 function showOverview(canvas,blob,kind){
- const label=kind==='berry'?'全18きのみ':'19食材';$('overview-title').textContent=label+'の一覧画像';
+ const label=kind==='berry'?`全${D.berries.length}きのみ`:`${D.ingredients.length}食材`;$('overview-title').textContent=label+'の一覧画像';
  if(overviewObjectURL)URL.revokeObjectURL(overviewObjectURL);overviewObjectURL=URL.createObjectURL(blob);
- const file=new File([blob],'ねむりの食材手帳-'+label+'.png',{type:'image/png'}),preview=$('overview-preview');preview.innerHTML='';
+ const file=new File([blob],'ねむりの厳選手帳-'+label+'.png',{type:'image/png'}),preview=$('overview-preview');preview.innerHTML='';
  const img=document.createElement('img');img.src=overviewObjectURL;img.alt=label+'の担当と特徴を比較する縦長画像';preview.append(img);
  const actions=document.createElement('div');actions.className='overview-actions';
  const save=document.createElement('a');save.href=overviewObjectURL;save.download=file.name;save.textContent='画像を保存';save.className='button primary';save.id='overview-save';actions.append(save);
@@ -162,15 +165,15 @@ function showOverview(canvas,blob,kind){
  preview.append(actions,info);open('overview-dialog');
 }
 async function exportOverview(kind='ingredient'){
- const snapshot=clone(state),sort=ingredientOrder,button=$(kind==='berry'?'berry-export':'overview-export'),oldText=button.textContent;button.disabled=true;button.textContent='作成中…';
+ const snapshot=clone(state),sort=clone(viewOptions[kind==='berry'?'berries':'board']),button=$(kind==='berry'?'berries-share':'board-share'),oldText=button.textContent;button.disabled=true;button.textContent='作成中…';
  try{
  const canvas=await compactOverviewCanvas(snapshot,sort,kind);
  const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!blob)throw new Error('画像を生成できませんでした');showOverview(canvas,blob,kind);
  }catch{toast('画像を作成できませんでした。もう一度お試しください');}finally{button.disabled=false;button.textContent=oldText;}
 }
-$('overview-export').onclick=()=>exportOverview('ingredient');$('berry-export').onclick=()=>exportOverview('berry');
+$('board-share').onclick=()=>exportOverview('ingredient');$('berries-share').onclick=()=>exportOverview('berry');
 $('detail-edit').onclick=()=>{$('detail').close();openEditor(detailId);};
-$('ingredient-order').onchange=()=>{ingredientOrder=$('ingredient-order').value;renderBoard();};
+for(const view of ['board','berries']){for(const [suffix,key] of [['order','by'],['direction','direction']])$(view+'-'+suffix).onchange=()=>{viewOptions[view][key]=$(view+'-'+suffix).value;view==='board'?renderBoard():renderBerries();};}
 $('evolution-mode').onchange=()=>commit({...state,evolution:$('evolution-mode').value});
 $('camp-mode').onchange=()=>commit({...state,camp:$('camp-mode').value==='on'});
 $('final-form-choices').addEventListener('change',e=>{const id=e.target.dataset.finalForm;if(!id)return;const finalForms={...state.finalForms};if(e.target.value)finalForms[id]=e.target.value;else delete finalForms[id];commit({...state,finalForms});});
@@ -185,7 +188,7 @@ $('backup-menu').onclick=()=>{$('import-backup').value='';$('import-preview').in
 $('backup-footer').onclick=$('backup-menu').onclick;
 $('export-backup').onclick=exportBackup;$('import-backup').onchange=importBackup;
 $('share-open').onclick=()=>exportOverview(tab==='berries'?'berry':'ingredient');
-document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.close)$(b.dataset.close).close();if(b.dataset.tab)showTab(b.dataset.tab);if(b.dataset.level)commit({...state,mode:b.dataset.level});if(b.dataset.filter){filter=b.dataset.filter;document.querySelectorAll('[data-filter]').forEach(x=>x.classList.toggle('selected',x===b));renderBoard();}if(b.dataset.detail)openDetail(b.dataset.detail);if(b.dataset.assign)openAssignment(b.dataset.assign);if(b.dataset.berryAssign)openBerryAssignment(b.dataset.berryAssign);if(b.hasAttribute('data-new'))openEditor();if(b.hasAttribute('data-conditions'))$('condition-open').click();});
+document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.dataset.close)$(b.dataset.close).close();if(b.dataset.tab)showTab(b.dataset.tab);if(b.dataset.level)commit({...state,mode:b.dataset.level});if(b.dataset.targetFilter){const view=b.dataset.targetKind;viewOptions[view].filter=b.dataset.targetFilter;view==='board'?renderBoard():renderBerries();}if(b.dataset.detail)openDetail(b.dataset.detail);if(b.dataset.assign)openAssignment(b.dataset.assign);if(b.dataset.berryAssign)openBerryAssignment(b.dataset.berryAssign);if(b.hasAttribute('data-new'))openEditor();if(b.hasAttribute('data-conditions'))$('condition-open').click();});
 window.addEventListener('storage',e=>{if(e.key===KEY&&e.newValue){try{const incoming=C.validateState(JSON.parse(e.newValue));if(document.querySelector('dialog[open]')){storageWarning('別のタブでデータが更新されました。再読み込みしてから編集してください。');blockedRaw=e.newValue;}else{state=C.autoAssign(incoming);render();toast('別のタブの変更を反映しました');}}catch{storageWarning('別のタブで保存データが変わりました。再読み込みしてください。');blockedRaw=e.newValue;}}});
 document.addEventListener('error',e=>{if(e.target.matches?.('.portrait img'))e.target.replaceWith(document.createTextNode('◇'));},true);
 if(TEST)document.querySelector('.local-indicator').textContent='動作確認用・本番データと別保存';

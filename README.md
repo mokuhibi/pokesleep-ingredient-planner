@@ -1,4 +1,4 @@
-# pokesleep-ingredient-planner — ねむりの食材手帳
+# pokesleep-ingredient-planner — ねむりの厳選手帳
 
 ポケモンスリープの食材担当と厳選状況を手入力で管理する、スマートフォン対応の非公式Webアプリです。
 

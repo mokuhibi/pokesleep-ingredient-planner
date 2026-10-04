@@ -53,3 +53,10 @@ assert(B.nature({...p,nature:'BRAVE'},true).includes('class="up"'));
 console.log('PASS target-first layout, shared name/level/nature coordinates, exact grouped skill order');
 
 assert(B.nature({...p,nature:'BASHFUL'},true).includes('―'));assert(B.nature({...p,nature:''},true).includes('性格未入力'));
+
+const sortSnapshot=JSON.stringify(s),masterSnapshot=JSON.stringify(D.ingredients);
+assert.equal(B.targetList('ingredient',s,{filter:'assigned'}).length,2);assert.equal(B.targetList('ingredient',s,{filter:'empty'}).length,17);
+assert.deepEqual(Array.from(B.targetList('ingredient',s,{by:'energy',direction:'desc'}),x=>x.id),Array.from(D.ingredients,x=>x.id).reverse());
+assert.equal((B.render({...options,items:B.targetList('ingredient',s,{filter:'assigned'})}).match(/<article/g)||[]).length,2);
+assert.equal(JSON.stringify(s),sortSnapshot);assert.equal(JSON.stringify(D.ingredients),masterSnapshot);
+console.log('PASS actual assignment filters, adopted energy order/reverse, no mutation');

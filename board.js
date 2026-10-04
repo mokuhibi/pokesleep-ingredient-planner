@@ -3,7 +3,7 @@
 'use strict';
 const C=root.SleepCore,D=root.SleepData;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const short={INGREDIENT_FINDER_S:'食S',INGREDIENT_FINDER_M:'食M',HELPING_SPEED_S:'おてスピS',HELPING_SPEED_M:'おてスピM',HELPING_BONUS:'おてボ',INVENTORY_S:'所持S',INVENTORY_M:'所持M',INVENTORY_L:'所持L',BERRY_FINDING_S:'きのみS'};
+const short={INGREDIENT_FINDER_S:'食S',INGREDIENT_FINDER_M:'食M',HELPING_SPEED_S:'おてスピS',HELPING_SPEED_M:'おてスピM',HELPING_BONUS:'おてボ',INVENTORY_S:'所持S',INVENTORY_M:'所持M',INVENTORY_L:'所持L',BERRY_FINDING_S:'きのみS',ENERGY_RECOVERY_BONUS:'げんきボ',SKILL_LEVEL_UP_S:'スLvS',SKILL_LEVEL_UP_M:'スLvM',SKILL_TRIGGER_S:'ス率S',SKILL_TRIGGER_M:'ス率M',SLEEP_EXP_BONUS:'睡眠EXP',DREAM_SHARD_BONUS:'ゆめボ',RESEARCH_EXP_BONUS:'研究EXP'};
 const statusName={active:'解放済み',projected:'試算で解放',locked:'未解放'};
 const displaySpecies=(p,state={})=>!C.species(p.species)?(p.customName||'未入力'):state.evolution==='final'?(C.simulatedSpecies(p,state)?.name||'進化先未選択'):C.species(p.species).name;
 function identity(p,state){return `<div class="compact-row compact-identity"><button class="mini-person" data-detail="${esc(p.id)}" title="${esc(displaySpecies(p,state))}・現在Lv.${p.level}・計算Lv.${C.effectiveLevel(p,state.mode)}・詳細を開く"><span class="mini-person-name">${esc(displaySpecies(p,state))}</span></button><span class="card-level" title="現在Lv.${p.level}・計算Lv.${C.effectiveLevel(p,state.mode)}">Lv.${C.effectiveLevel(p,state.mode)}</span>${nature(p,true)}</div><div class="compact-row compact-secondary"><span class="card-nickname" title="${esc(p.nickname)}">${esc(p.nickname)}</span></div>`;}
@@ -28,11 +28,19 @@ const specifiedOrder=['Leek','Mushroom','Egg','Potato','Apple','Herb','Sausage',
 function orderedIngredients(mode='energy'){return mode==='specified'?specifiedOrder.map(id=>C.ingredient(id)):[...D.ingredients];}
 function dailyHTML(p,state,target){const {result:r,items}=daily(p,state.mode,state.energy,state);const entries=r.ok?[[target,r.counts[target]]]:[];return `<div class="compact-yield" aria-label="1日の食材別推定収集数">${r.ok?entries.map(([id,v],i)=>i===0?`<button class="target-yield" data-assign="${id}" title="${esc(C.ingredient(id).name)} ${v.toFixed(1)}個 / 24時間・担当を編集">${C.ingredient(id).icon} <b>${v.toFixed(1)}</b></button>`:`<b title="${esc(C.ingredient(id).name)} ${v.toFixed(1)}個 / 24時間">${C.ingredient(id).icon} ${v.toFixed(1)}</b>`).join(''):`<button class="target-yield" data-assign="${target}" title="${esc(r.errors.join(' / '))}">${C.ingredient(target).icon} —</button><small>${r.level>70?'将来・未計算':r.errors[0]?.includes('進化先')?'進化先を選択':'条件不足・詳細へ'}</small>`}</div>`;}
 function time(seconds){const s=Math.round(seconds);return `${Math.floor(s/3600)}:${String(Math.floor(s%3600/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;}
-function render({state,list,sort='energy'}){
+function render({state,list=D.ingredients,sort='energy',items=null}){
  const owner=id=>state.pokemon.find(p=>p.id===state.assignments[id]?.pokemonId);
- return orderedIngredients(sort).map(ing=>{const p=owner(ing.id),a=state.assignments[ing.id],match=list.some(i=>i.id===ing.id);return `<article class="harvest-tile ${p?'assigned':'unassigned'} ${match?'':'search-muted'}" aria-label="${esc(ing.name)}の担当">${p?`<div class="compact-top">${dailyHTML(p,state,ing.id)}${letterSlots(p,state.mode)}</div>${identity(p,state)}${skills(p,state.mode)}`:`<button class="empty-ingredient" data-assign="${ing.id}" aria-label="${esc(ing.name)}の担当を登録">${ing.icon}</button><div class="empty-owner" aria-label="未選出・計算可能な対象個体なし"></div>`}</article>`;}).join('');
+ return (items||orderedIngredients(sort)).map(ing=>{const p=owner(ing.id),a=state.assignments[ing.id],match=list.some(i=>i.id===ing.id);return `<article class="harvest-tile ${p?'assigned':'unassigned'} ${match?'':'search-muted'}" aria-label="${esc(ing.name)}の担当">${p?`<div class="compact-top">${dailyHTML(p,state,ing.id)}${letterSlots(p,state.mode)}</div>${identity(p,state)}${skills(p,state.mode)}`:`<button class="empty-ingredient" data-assign="${ing.id}" aria-label="${esc(ing.name)}の担当を登録">${ing.icon}</button><div class="empty-owner" aria-label="未選出・計算可能な対象個体なし"></div>`}</article>`;}).join('');
 
 
 }
-root.BoardView={displaySpecies,identity,evaluationSkills,orderedIngredients,render,time,nature,skills,miniSlots,slotLetters,letterSlots,daily};
+function targetList(kind,state,options={}){
+ const master=kind==='berry'?D.berries:D.ingredients,assignments=kind==='berry'?state.berryAssignments:state.assignments;
+ let items=[...master];
+ if(options.by==='energy'&&kind==='berry')items.sort((a,b)=>a.value-b.value||master.indexOf(a)-master.indexOf(b));
+ if(options.direction==='desc')items.reverse();
+ const assigned=i=>state.pokemon.some(p=>p.id===assignments[i.id]?.pokemonId);
+ return items.filter(i=>!options.filter||options.filter==='all'||options.filter==='assigned'&&assigned(i)||options.filter==='empty'&&!assigned(i));
+}
+root.BoardView={short,targetList,displaySpecies,identity,evaluationSkills,orderedIngredients,render,time,nature,skills,miniSlots,slotLetters,letterSlots,daily};
 })(globalThis);

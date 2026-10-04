@@ -23,7 +23,7 @@ except OSError:
     try:
         with urllib.request.urlopen(URL, timeout=2) as r:
             existing = r.read(30000).decode('utf-8')
-        if 'ねむりの食材手帳' not in existing:
+        if 'ねむりの厳選手帳' not in existing:
             raise RuntimeError('別のアプリがこのアドレスを使用しています。')
         webbrowser.open(URL)
         print('すでに起動している食材手帳を開きました。')
@@ -32,7 +32,7 @@ except OSError:
         print('起動できませんでした。ポート8765を使用しているアプリを確認してください。')
         input('Enterで閉じます。')
         sys.exit(1)
-print('ねむりの食材手帳を起動しました。\n' + URL)
+print('ねむりの厳選手帳を起動しました。\n' + URL)
 print('この画面を閉じるとアプリの配信を終了します。保存済みの記録はブラウザに残ります。')
 webbrowser.open(URL)
 try:

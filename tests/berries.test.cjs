@@ -38,3 +38,10 @@ console.log('PASS berries: 18 masters/assets/247 mappings, independent energy re
 for(const b of D.berries){assert(BerryView.typeNames[b.type]);assert(html.includes(BerryView.typeNames[b.type]));assert(html.includes(b.name));}
 const skills=BoardView.skills(p,'current','berry');assert.deepEqual(Array.from(skills.matchAll(/data-skill="([^"]+)"/g),m=>m[1]),['BERRY_FINDING_S','HELPING_BONUS','HELPING_SPEED_M','HELPING_SPEED_S']);assert.equal((skills.match(/class="skill-row /g)||[]).length,2);
 console.log('PASS all adopted berry types localized, berry name and energy, exact two-row skill matrix');
+
+const energyAsc=BoardView.targetList('berry',s,{by:'energy'});for(let i=1;i<energyAsc.length;i++)assert(energyAsc[i-1].value<=energyAsc[i].value);
+assert.deepEqual(BoardView.targetList('berry',s,{by:'energy',direction:'desc'}).map(x=>x.id),energyAsc.map(x=>x.id).reverse());
+assert.equal(BoardView.targetList('berry',s,{filter:'assigned'}).length,1);assert.equal(BoardView.targetList('berry',s,{filter:'empty'}).length,D.berries.length-1);
+assert.equal((BerryView.render(s,{filter:'assigned'}).match(/<article/g)||[]).length,1);
+for(const b of D.berries)assert(html.includes('type-'+b.type));
+console.log('PASS base-energy sorting with stable ties, berry filters and shared type classes');
