@@ -51,3 +51,5 @@ assert.equal((fullSkills.match(/class="skill-row /g)||[]).length,3);
 assert(evolved.indexOf('mini-person-name')<evolved.indexOf('card-level'));assert(evolved.indexOf('card-level')<evolved.indexOf('mini-nature'));assert(evolved.includes('Lv.70'));
 assert(B.nature({...p,nature:'BRAVE'},true).includes('class="up"'));
 console.log('PASS target-first layout, shared name/level/nature coordinates, exact grouped skill order');
+
+assert(B.nature({...p,nature:'BASHFUL'},true).includes('―'));assert(B.nature({...p,nature:''},true).includes('性格未入力'));

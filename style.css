@@ -96,3 +96,19 @@ body{padding-bottom:calc(82px + env(safe-area-inset-bottom,0px))}.tabs{position:
 
 .compact-row.compact-identity{grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr)}
 .compact-identity .mini-nature{justify-self:end;width:var(--nature-width)}
+
+/* Small comparison grid; keep all nature slots visibly present. */
+.mini-nature{border:1px solid #d7dfd0;border-radius:4px;background:#f5f7f1;box-sizing:border-box;display:flex;align-items:center;justify-content:center;height:26px;width:62px;padding:1px;gap:2px}.mini-nature .neutral{color:#899181}.mini-nature .up,.mini-nature .down{border:0;min-height:20px;padding:1px 2px}.harvest-grid{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+@media(max-width:740px){
+.harvest-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.harvest-tile,.berry-tile,.harvest-tile.unassigned{padding:7px;gap:3px;min-height:210px}
+.compact-top{min-height:40px;gap:3px}.compact-top .letter-slots{font-size:13px}.compact-yield .target-yield,.target-yield,.berry-yield b{font-size:17px}
+.compact-row.compact-identity{--nature-width:46px;grid-template-columns:minmax(0,1fr) 32px 46px;gap:2px;min-height:40px;align-items:center}
+.compact-identity .mini-person{width:100%;min-height:40px;text-align:left}.compact-identity .mini-person-name,.berry-tile .compact-identity .mini-person-name{font-size:12px;white-space:normal;overflow:visible;text-overflow:clip;line-height:1.25;word-break:normal}
+.card-level{font-size:11px}.mini-nature{font-size:11px;height:36px;flex-wrap:wrap;align-content:center;gap:0}.mini-nature .up,.mini-nature .down{font-size:11px;min-height:16px;line-height:1.2;padding:0 2px}
+.compact-secondary{min-height:14px}.card-nickname{font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fixed-skills .skill-row{gap:2px}.fixed-skills .mini-skill{font-size:11px;white-space:normal;overflow-wrap:anywhere;min-height:30px;padding:2px 1px;line-height:1.15;text-align:center}.harvest-tile .fixed-skills{min-height:94px;gap:2px}
+.berry-yield{grid-template-columns:minmax(0,1fr) auto;gap:0 2px;min-height:40px}.berry-yield .berry-name{font-size:11px;white-space:normal}.berry-yield .berry-type{font-size:10px;padding:1px 2px}.berry-yield b{grid-column:1/-1;text-align:right;line-height:1.2}
+}
+@media(min-width:560px) and (max-width:740px){.harvest-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:740px){.harvest-grid{grid-auto-rows:220px}.harvest-tile,.berry-tile,.harvest-tile.unassigned{height:220px;min-height:220px}.fixed-skills .skill-row{min-height:30px;align-items:stretch}}
