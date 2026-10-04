@@ -82,3 +82,6 @@ body{padding-bottom:calc(82px + env(safe-area-inset-bottom,0px))}.tabs{position:
 
 .skill-slot{height:100%}
 @media(min-width:801px){.skill-choice-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
+.fixed-skills .mini-skill.active{opacity:1}.fixed-skills .mini-skill.projected{opacity:.8}.fixed-skills .mini-skill.locked{opacity:.48}.fixed-skills .mini-skill.absent{opacity:.28}.fixed-skills .mini-skill.uncertain{opacity:.65}
+.berry-tile .fixed-skills{min-height:49px}

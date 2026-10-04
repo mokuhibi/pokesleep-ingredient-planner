@@ -58,12 +58,32 @@ function calcBerry(p,mode,energy,options={},target=null){
  if(!Number.isFinite(count)||count<0||power===null)return {ok:false,level:r.level,errors:['きのみの計算条件が未対応です']};
  return {...r,berryId:b.id,perDrop,count,power,berryEnergy:count*power};
 }
+function removePokemon(input,id){
+ const next=JSON.parse(JSON.stringify(input));next.pokemon=next.pokemon.filter(p=>p.id!==id);
+ for(const key of ['assignments','berryAssignments'])for(const [target,a] of Object.entries(next[key]))if(a.pokemonId===id)delete next[key][target];
+ for(const records of Object.values(next.assignmentHistory||{}))delete records[id];
+ for(const [target,list] of Object.entries(next.berryAssignmentHistory||{}))next.berryAssignmentHistory[target]=list.filter(pid=>pid!==id);
+ delete next.finalForms[id];return next;
+}
+// Ranking uses exactly the card calculations, with no new production coefficients.
+function autoAssign(input){
+ const state=JSON.parse(JSON.stringify(input)),history=state.assignmentHistory||{},berryHistory=state.berryAssignmentHistory||{};
+ for(const [id,a] of Object.entries(state.assignments))history[id]={...(history[id]||{}),[a.pokemonId]:{...a}};
+ for(const [id,a] of Object.entries(state.berryAssignments))berryHistory[id]=[...new Set([...(berryHistory[id]||[]),a.pokemonId])];
+ const food=[],berries=[];
+ for(const p of state.pokemon){const sp=simulatedSpecies(p,state);if(sp?.specialty==='ingredient'){const r=calc(p,state.mode,state.energy,state);if(r.ok)food.push({p,r});}if(sp?.specialty==='berry'){const r=calcBerry(p,state.mode,state.energy,state);if(r.ok)berries.push({p,r});}}
+ const best=(rows,value,previous)=>rows.filter(x=>Number.isFinite(value(x))&&value(x)>0).sort((a,b)=>value(b)-value(a)||(a.p.id===previous?-1:b.p.id===previous?1:a.p.id<b.p.id?-1:a.p.id>b.p.id?1:0))[0];
+ const assignments={},berryAssignments={};
+ for(const ing of D.ingredients){const winner=best(food,x=>x.r.counts[ing.id],state.assignments[ing.id]?.pokemonId);if(winner){const id=winner.p.id,records=history[ing.id]||{},record=Object.prototype.hasOwnProperty.call(records,id)?records[id]:null;assignments[ing.id]=record?{...record}:{pokemonId:id,complete:false,note:'',completedAt:null};}}
+ for(const b of D.berries){const winner=best(berries.filter(x=>x.r.berryId===b.id),x=>x.r.berryEnergy,state.berryAssignments[b.id]?.pokemonId);if(winner)berryAssignments[b.id]={pokemonId:winner.p.id};}
+ return {...state,assignments,berryAssignments,assignmentHistory:history,berryAssignmentHistory:berryHistory};
+}
 function compare(state,recipe){return recipe.ingredients.map(x=>{
  const a=state.assignments[x.id],p=a&&state.pokemon.find(p=>p.id===a.pokemonId),result=p?calc(p,state.mode,state.energy,state):null;
  const quantity=result?.ok?result.counts[x.id]:null;
  return {...x,need:x.amount*3,pokemon:p,result,quantity,diff:quantity===null?null:quantity-x.amount*3};
 });}
-function emptyState(){return {schemaVersion:1,pokemon:[],assignments:{},berryAssignments:{},mode:'current',energy:100,evolution:'current',camp:false,finalForms:{},recipeId:D.recipes[0].id,updatedAt:null};}
+function emptyState(){return {schemaVersion:1,pokemon:[],assignments:{},berryAssignments:{},assignmentHistory:{},berryAssignmentHistory:{},mode:'current',energy:100,evolution:'current',camp:false,finalForms:{},recipeId:D.recipes[0].id,updatedAt:null};}
 function validateState(input){
  const fail=m=>{throw new Error(m);};
  if(!input||typeof input!=='object'||input.schemaVersion!==1)fail('対応していないバックアップ形式です');
@@ -98,6 +118,18 @@ function validateState(input){
   if(!berry(id)||!a||!ids.has(a.pokemonId))fail('きのみ担当データの参照が不正です');
   state.berryAssignments[id]={pokemonId:a.pokemonId};
  }
+ const history=input.assignmentHistory??{};
+ if(!history||typeof history!=='object'||Array.isArray(history))fail('担当履歴が不正です');
+ for(const [id,records] of Object.entries(history)){
+  if(!ingredient(id)||!records||typeof records!=='object'||Array.isArray(records))fail('担当履歴が不正です');
+  const entries=[];for(const [pid,a] of Object.entries(records)){
+   if(!ids.has(pid)||!a||a.pokemonId!==pid||typeof a.complete!=='boolean'||!text(a.note,500)||a.completedAt!==null&&(!text(a.completedAt,40)||Number.isNaN(Date.parse(a.completedAt))))fail('担当履歴の参照が不正です');
+   entries.push([pid,{pokemonId:pid,complete:a.complete,note:a.note,completedAt:a.completedAt}]);
+  }state.assignmentHistory[id]=Object.fromEntries(entries);
+ }
+ const berryHistory=input.berryAssignmentHistory??{};
+ if(!berryHistory||typeof berryHistory!=='object'||Array.isArray(berryHistory))fail('きのみ担当履歴が不正です');
+ for(const [id,list] of Object.entries(berryHistory)){if(!berry(id)||!Array.isArray(list)||!list.every(pid=>ids.has(pid)))fail('きのみ担当履歴の参照が不正です');state.berryAssignmentHistory[id]=[...new Set(list)];}
  if(!['current','50','60','70','80'].includes(input.mode))fail('表示レベルが不正です');
  if(![0,20,50,70,100].includes(input.energy))fail('計算条件が不正です');
  if(!lookup(D.recipes,input.recipeId))fail('料理が不正です');
@@ -109,5 +141,5 @@ function validateState(input){
  state.mode=input.mode;state.energy=input.energy;state.recipeId=input.recipeId;state.updatedAt=typeof input.updatedAt==='string'?input.updatedAt:null;
  return state;
 }
-root.SleepCore={ING_LEVELS,SKILL_LEVELS,species,ingredient,berry,nature,skill,effectiveLevel,unlocked,slotStatus,finalSpecies,simulatedSpecies,calc,berryPower,calcBerry,compare,emptyState,validateState};
+root.SleepCore={ING_LEVELS,SKILL_LEVELS,species,ingredient,berry,nature,skill,effectiveLevel,unlocked,slotStatus,finalSpecies,simulatedSpecies,calc,berryPower,calcBerry,autoAssign,removePokemon,compare,emptyState,validateState};
 })(globalThis);

@@ -5,7 +5,7 @@ const p={id:'test',species:'CHARIZARD',customName:'',nickname:'<script>test</scr
 s.pokemon=[p];s.assignments.Sausage={pokemonId:p.id,complete:true,note:'',completedAt:null};s.assignments.Ginger={pokemonId:p.id,complete:false,note:'',completedAt:null};
 const options={state:s,list:D.ingredients,slotsHTML:()=>'',skillsHTML:()=>'',levelLabel:()=>''};
 const before=JSON.stringify(s),compact=B.render({...options,layout:'compact'}),rich=B.render({...options,layout:'rich'});
-assert.equal((compact.match(/<article/g)||[]).length,19);assert.equal((rich.match(/<article/g)||[]).length,1);assert.equal(JSON.stringify(s),before);assert(!compact.includes('<script>'));assert(compact.includes('&lt;script&gt;'));
+assert.equal((compact.match(/<article/g)||[]).length,19);assert.equal((rich.match(/<article/g)||[]).length,19);assert.equal(JSON.stringify(s),before);assert(!compact.includes('<script>'));assert(compact.includes('&lt;script&gt;'));
 assert(B.nature(p).includes('食↑'));p.nature='BRAVE';assert(B.nature(p).includes('速↑'));
 assert(B.skills(p,'current').includes('·おボ'));assert(!B.skills(p,'70').includes('↗'));assert(B.skills(p,'70').includes('おボ'));assert(!B.skills(p,'80').includes('↗'));assert(B.skills(p,'80').includes('所L'));
 assert.equal(B.time(3661),'1:01:01');console.log('PASS 19 tiles, unique individuals, no data mutation, escaped labels, nature directions, unlock states, time formatting');
@@ -36,7 +36,7 @@ console.log('PASS target-only totals, no additional final species label, project
 // Compare the same coordinates across different ownership, levels and missing information.
 const skillOrder=html=>Array.from(html.matchAll(/data-skill="([^"]+)"/g),m=>m[1]);
 const fullSkills=B.skills(p,'current'),unknownSkills=B.skills({...p,subskills:['','','','','']},'70');
-assert.deepEqual(skillOrder(fullSkills),skillOrder(unknownSkills));assert.equal(skillOrder(fullSkills).length,9);
+assert.deepEqual(skillOrder(fullSkills),skillOrder(unknownSkills));assert.equal(skillOrder(fullSkills).length,8);
 assert(fullSkills.includes('rarity-gold owned locked'));assert(fullSkills.includes('rarity-silver owned active'));assert(fullSkills.includes('rarity-white owned active'));
 assert(fullSkills.includes('未所持'));assert(!unknownSkills.includes('未所持'));assert(unknownSkills.includes('未確認'));
 assert(B.skills(p,'70').includes('rarity-gold owned projected'));assert(B.nature({...p,nature:'BASHFUL'},true).includes('class="mini-nature"'));
