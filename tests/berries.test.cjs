@@ -34,3 +34,7 @@ const snapshot=JSON.stringify(s),html=BerryView.render(s);assert.equal((html.mat
 assert(!BerryView.render({...s,pokemon:[{...p,nickname:'<script>x</script>'}]}).includes('<script>'));
 assert(BerryView.render({...s,mode:'80'}).includes('将来・未計算'));
 console.log('PASS berries: 18 masters/assets/247 mappings, independent energy reference, berry specialty and BFS unlock, missing inputs, 80 unknown, final form and berry change, camp, immutable individuals, old/new backups, invalid refs, compact cards and escaping');
+
+for(const b of D.berries){assert(BerryView.typeNames[b.type]);assert(html.includes(BerryView.typeNames[b.type]));assert(html.includes(b.name));}
+const skills=BoardView.skills(p,'current','berry');assert.deepEqual(Array.from(skills.matchAll(/data-skill="([^"]+)"/g),m=>m[1]),['BERRY_FINDING_S','HELPING_BONUS','HELPING_SPEED_M','HELPING_SPEED_S']);assert.equal((skills.match(/class="skill-row /g)||[]).length,2);
+console.log('PASS all adopted berry types localized, berry name and energy, exact two-row skill matrix');

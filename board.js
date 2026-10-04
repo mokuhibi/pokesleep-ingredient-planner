@@ -1,21 +1,23 @@
-/* Two purpose-built views. No mutations to registered individuals or assignments. */
+/* Shared compact cards. No mutations to registered individuals or assignments. */
 (function(root){
 'use strict';
 const C=root.SleepCore,D=root.SleepData;
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const short={INGREDIENT_FINDER_S:'食S',INGREDIENT_FINDER_M:'食M',HELPING_SPEED_S:'速S',HELPING_SPEED_M:'速M',HELPING_BONUS:'おボ',INVENTORY_S:'所S',INVENTORY_M:'所M',INVENTORY_L:'所L',BERRY_FINDING_S:'きS'};
+const short={INGREDIENT_FINDER_S:'食S',INGREDIENT_FINDER_M:'食M',HELPING_SPEED_S:'おてスピS',HELPING_SPEED_M:'おてスピM',HELPING_BONUS:'おてボ',INVENTORY_S:'所持S',INVENTORY_M:'所持M',INVENTORY_L:'所持L',BERRY_FINDING_S:'きのみS'};
 const statusName={active:'解放済み',projected:'試算で解放',locked:'未解放'};
 const displaySpecies=(p,state={})=>!C.species(p.species)?(p.customName||'未入力'):state.evolution==='final'?(C.simulatedSpecies(p,state)?.name||'進化先未選択'):C.species(p.species).name;
-function identity(p,state,extra=''){return `<div class="compact-row compact-identity"><button class="mini-person" data-detail="${esc(p.id)}" title="${esc(displaySpecies(p,state))}・Lv.${C.effectiveLevel(p,state.mode)}・詳細を開く"><span class="mini-person-name">${esc(displaySpecies(p,state))}</span></button>${nature(p,true)}</div><div class="compact-row compact-secondary"><span class="card-nickname" title="${esc(p.nickname)}">${esc(p.nickname)}</span>${extra}</div>`;}
+function identity(p,state){return `<div class="compact-row compact-identity"><button class="mini-person" data-detail="${esc(p.id)}" title="${esc(displaySpecies(p,state))}・現在Lv.${p.level}・計算Lv.${C.effectiveLevel(p,state.mode)}・詳細を開く"><span class="mini-person-name">${esc(displaySpecies(p,state))}</span></button><span class="card-level" title="現在Lv.${p.level}・計算Lv.${C.effectiveLevel(p,state.mode)}">Lv.${C.effectiveLevel(p,state.mode)}</span>${nature(p,true)}</div><div class="compact-row compact-secondary"><span class="card-nickname" title="${esc(p.nickname)}">${esc(p.nickname)}</span></div>`;}
 function portrait(p,state){const sp=C.simulatedSpecies(p,state);return `<span class="portrait" aria-hidden="true">${sp?`<img src="assets/pokemon/${sp.dex}.png" alt="" loading="lazy" width="64" height="64">`:'◇'}</span>`;}
 function nature(p,compact=false){const n=C.nature(p.nature);if(!n)return '<span class="mini-nature unknown">性格?</span>';const badges=[['ingredient','食'],['speed','速']].flatMap(([key,label])=>n.positiveModifier===key?[`<span class="up" title="${label==='食'?'食材おてつだい確率':'おてつだいスピード'}アップ">${label}↑</span>`]:n.negativeModifier===key?[`<span class="down" title="${label==='食'?'食材おてつだい確率':'おてつだいスピード'}ダウン">${label}↓</span>`]:[]);return `<span class="mini-nature">${badges.join(' ')||(compact?'':'<span title="食材確率・速度の性格補正なし">食速±</span>')}</span>`;}
 // Fixed purpose-specific evaluation coordinates; never remove skills from individuals.
-const evaluationSkills={individual:['HELPING_BONUS','BERRY_FINDING_S','INGREDIENT_FINDER_M','HELPING_SPEED_M','INVENTORY_M','INVENTORY_L','INGREDIENT_FINDER_S','HELPING_SPEED_S','INVENTORY_S'],ingredient:['HELPING_BONUS','INGREDIENT_FINDER_M','HELPING_SPEED_M','INVENTORY_M','INVENTORY_L','INGREDIENT_FINDER_S','HELPING_SPEED_S','INVENTORY_S'],berry:['HELPING_BONUS','BERRY_FINDING_S','HELPING_SPEED_M','HELPING_SPEED_S']};
+const evaluationSkills={individual:['HELPING_BONUS','BERRY_FINDING_S','INGREDIENT_FINDER_M','HELPING_SPEED_M','INVENTORY_M','INVENTORY_L','INGREDIENT_FINDER_S','HELPING_SPEED_S','INVENTORY_S'],ingredient:['INGREDIENT_FINDER_M','INGREDIENT_FINDER_S','HELPING_BONUS','HELPING_SPEED_M','HELPING_SPEED_S','INVENTORY_L','INVENTORY_M','INVENTORY_S'],berry:['BERRY_FINDING_S','HELPING_BONUS','HELPING_SPEED_M','HELPING_SPEED_S']};
 function skills(p,mode,purpose='ingredient'){
  const list=evaluationSkills[purpose]||evaluationSkills.ingredient,missing=p.subskills.some(id=>!id);
  const badge=id=>{const sk=C.skill(id),i=p.subskills.indexOf(id),owned=i>=0,status=owned?C.slotStatus(p,C.SKILL_LEVELS[i],mode):missing?'uncertain':'absent';const label=owned?`Lv.${C.SKILL_LEVELS[i]} ${sk.name}・${statusName[status]}`:`${sk.name}・${missing?'未確認（サブスキルに未入力あり）':'未所持'}`;
  return `<span class="mini-skill rarity-${sk.rarity} ${owned?'owned ':''}${status}" data-skill="${id}" title="${esc(label)}" aria-label="${esc(label)}">${owned&&status==='locked'?'·':''}${short[id]}${!owned&&missing?'<sup>?</sup>':''}${status==='projected'?'<sup>試</sup>':''}</span>`;};
- return `<div class="mini-skills fixed-skills" aria-label="固定位置の評価サブスキル"><div class="skill-row elevated">${list.filter(id=>C.skill(id).rarity!=='white').map(badge).join('')}</div><div class="skill-row common">${list.filter(id=>C.skill(id).rarity==='white').map(badge).join('')}</div></div>`;
+ const groups=purpose==='ingredient'?[list.slice(0,2),list.slice(2,5),list.slice(5)]:purpose==='berry'?[list.slice(0,2),list.slice(2)]:[list.filter(id=>C.skill(id).rarity!=='white'),list.filter(id=>C.skill(id).rarity==='white')];
+ return `<div class="mini-skills fixed-skills purpose-${purpose}" aria-label="固定位置の評価サブスキル">${groups.map((ids,i)=>`<div class="skill-row skill-group-${i}" style="--skill-columns:${purpose==='individual'?3:ids.length}">${ids.map(badge).join('')}</div>`).join('')}</div>`;
+
 }
 
 function miniSlots(p,mode){return `<span class="mini-slots" aria-label="食材1・2・3枠">${p.slots.map((id,i)=>{const ing=C.ingredient(id),status=C.slotStatus(p,C.ING_LEVELS[i],mode);return `<span class="${status}" title="${i+1}枠目 ${esc(ing?.name||'未入力')}・${statusName[status]}" aria-label="${i+1}枠目 ${esc(ing?.name||'未入力')} ${statusName[status]}">${ing?.icon||'?'}${status==='locked'?'<sup>·</sup>':status==='projected'?'<sup>↗</sup>':''}</span>`;}).join('')}</span>`;}
@@ -28,7 +30,7 @@ function dailyHTML(p,state,target){const {result:r,items}=daily(p,state.mode,sta
 function time(seconds){const s=Math.round(seconds);return `${Math.floor(s/3600)}:${String(Math.floor(s%3600/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;}
 function render({state,list,sort='energy'}){
  const owner=id=>state.pokemon.find(p=>p.id===state.assignments[id]?.pokemonId);
- return orderedIngredients(sort).map(ing=>{const p=owner(ing.id),a=state.assignments[ing.id],match=list.some(i=>i.id===ing.id);return `<article class="harvest-tile ${match?'':'search-muted'}" aria-label="${esc(ing.name)}の担当">${p?`<div class="compact-top">${dailyHTML(p,state,ing.id)}</div>${identity(p,state,letterSlots(p,state.mode))}${skills(p,state.mode)}`:`<button class="empty-ingredient" data-assign="${ing.id}" aria-label="${esc(ing.name)}の担当を登録">${ing.icon}</button><div class="empty-owner" aria-label="未選出・計算可能な対象個体なし"></div>`}</article>`;}).join('');
+ return orderedIngredients(sort).map(ing=>{const p=owner(ing.id),a=state.assignments[ing.id],match=list.some(i=>i.id===ing.id);return `<article class="harvest-tile ${p?'assigned':'unassigned'} ${match?'':'search-muted'}" aria-label="${esc(ing.name)}の担当">${p?`<div class="compact-top">${dailyHTML(p,state,ing.id)}${letterSlots(p,state.mode)}</div>${identity(p,state)}${skills(p,state.mode)}`:`<button class="empty-ingredient" data-assign="${ing.id}" aria-label="${esc(ing.name)}の担当を登録">${ing.icon}</button><div class="empty-owner" aria-label="未選出・計算可能な対象個体なし"></div>`}</article>`;}).join('');
 
 
 }
