@@ -28,4 +28,20 @@ test('branch evolution requires selection and rejects wrong line',()=>{const p=m
 test('old backup defaults and simulation backup round trip',()=>{const old=C.emptyState();delete old.evolution;delete old.camp;delete old.finalForms;const converted=C.validateState(old);assert.equal(converted.evolution,'current');assert.equal(converted.camp,false);converted.pokemon=[make()];converted.evolution='final';converted.camp=true;assert.deepEqual(C.validateState(JSON.parse(JSON.stringify(converted))),converted);});
 test('simulation conditions apply to cooking and future level remains unknown',()=>{const s=C.emptyState();s.pokemon=[make({species:'CHARMANDER',ribbon:0})];s.assignments.Sausage={pokemonId:'p1',complete:false,note:'',completedAt:null};s.evolution='final';s.camp=true;const r=C.compare(s,{ingredients:[{id:'Sausage',amount:1}]})[0];close(r.quantity,C.calc(s.pokemon[0],s.mode,s.energy,s).counts.Sausage);assert.equal(C.calc(s.pokemon[0],'80',100,s).ok,false);});
 
+test('Foongus and Amoonguss verified production, evolution, auto ranking and backup',()=>{
+ const skills=['INVENTORY_S','INVENTORY_M','INVENTORY_L','HELPING_BONUS','HELPING_SPEED_S'];
+ const foo=make({id:'foongus-test',species:'FOONGUS',nickname:'そのまま',slots:['Mushroom','Egg','Tomato'],subskills:skills});
+ const amo={...foo,id:'amoonguss-test',species:'AMOONGUSS'};
+ const original=JSON.stringify(foo),normal=C.calc(foo,'current',100),final=C.calc(foo,'current',100,{evolution:'final'}),direct=C.calc(amo,'current',100);
+ assert(normal.ok&&final.ok&&direct.ok);assert.deepEqual(Array.from(C.finalSpecies('FOONGUS')),['AMOONGUSS']);assert.equal(final.calculationSpecies,'AMOONGUSS');
+ const interval=Math.floor(.882*5700)*.45,helps=86400/interval;
+ close(normal.interval,interval);close(normal.counts.Mushroom,helps*.174*2/3);close(normal.counts.Egg,helps*.174*7/3);close(normal.counts.Tomato,helps*.174*11/3);
+ for(const id of ['Mushroom','Egg','Tomato'])close(final.counts[id],direct.counts[id]);assert(final.counts.Mushroom>normal.counts.Mushroom);
+ assert.equal(JSON.stringify(foo),original);assert.equal(C.species('FOONGUS').carry,null);assert.equal(C.species('AMOONGUSS').carry,null);
+ const state=C.emptyState();state.pokemon=[foo];let selected=C.autoAssign(state);assert.equal(selected.assignments.Mushroom.pokemonId,foo.id);
+ selected.pokemon.push(amo);selected=C.autoAssign(selected);for(const id of ['Mushroom','Egg','Tomato'])assert.equal(selected.assignments[id].pokemonId,amo.id);
+ assert.deepEqual(C.validateState(JSON.parse(JSON.stringify(selected))),selected);
+ const mono=C.calc({...foo,slots:['Mushroom','Mushroom','Mushroom']},'current',100);close(mono.counts.Mushroom,helps*.174*(2+5+7)/3);
+ assert(C.calc(foo,'70',100,{evolution:'final',camp:true}).ok);assert(!C.calc(foo,'80',100,{evolution:'final'}).ok);
+});
 console.log(`${checks} tests passed`);

@@ -84,3 +84,7 @@ assert(!compact.includes('食材並び ABC'));assert(!compact.includes('letter-s
 assert(B.miniSlots({...p,slots:['Sausage','Sausage','Herb']},'current',false).includes('🥩'));assert(!B.miniSlots(p,'70',false).includes('<sup>'));
 assert(B.nature({...p,nature:'QUIET'},true,'berry').includes('―'));assert(!B.nature({...p,nature:'QUIET'},true,'berry').includes('食↑'));assert(B.nature({...p,nature:'BRAVE'},true,'berry').includes('速↑'));
 console.log('PASS actual slot icons without letters/markers, target-only yield, berry-only speed nature and neutral frame');
+
+const foongus={...p,species:'FOONGUS',nickname:'そのまま',slots:['Mushroom','Egg','Tomato']},unchangedFoongus=JSON.stringify(foongus);
+assert.equal(B.displaySpecies(foongus,{evolution:'current'}),'タマゲタケ');assert.equal(B.displaySpecies(foongus,{evolution:'final'}),'モロバレル');assert(B.identity(foongus,{mode:'60',evolution:'final'}).includes('そのまま'));assert.equal(JSON.stringify(foongus),unchangedFoongus);
+console.log('PASS Foongus final display with unchanged nickname and registered species');
