@@ -29,3 +29,6 @@ __pycache__/
 
 # Reviewed berry display assets only
 !assets/berries/*.png
+
+# Reviewed app icons derived from user-approved artwork
+!assets/icons/*.png

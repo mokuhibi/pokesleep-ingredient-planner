@@ -135,3 +135,6 @@ body{padding-bottom:calc(82px + env(safe-area-inset-bottom,0px))}.tabs{position:
 @media(max-width:740px){.harvest-grid{grid-auto-rows:238px}.harvest-tile,.berry-tile,.harvest-tile.unassigned{height:238px;min-height:238px}.member-grid{grid-auto-rows:250px}.member-grid .member-card{height:250px;min-height:250px}.compact-top{min-height:28px}.berry-yield{min-height:58px}.berry-yield .berry-type{font-size:12px}.berry-yield .berry-name{font-size:12px}.simulation-toggles{gap:6px}.simulation-toggles .check-control{font-size:12px;padding:6px}.compact-top .mini-slots>span{font-size:16px}}
 .berry-yield{grid-template-rows:minmax(28px,auto) 30px}.berry-yield .berry-type{max-width:100%;box-sizing:border-box;white-space:normal;overflow-wrap:anywhere}
 @media(max-width:360px){.berry-yield .berry-type{font-size:11px;padding:2px}.berry-yield b{font-size:16px}}
+
+/* User-supplied app icon: retain the existing header footprint without cropping. */
+.brand-mark.app-icon{display:block;object-fit:contain;border-radius:0;background:transparent;flex-shrink:0}
