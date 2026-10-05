@@ -126,33 +126,43 @@ $('pokemon-form').addEventListener('submit',savePokemon);
 $('delete-pokemon').onclick=()=>{const id=$('pokemon-id').value;if(!confirm('この個体と、この個体に紐づく担当設定を削除しますか？'))return;const next=C.removePokemon(state,id);if(commit(next,'個体を削除しました'))$('editor').close();};
 $('board-register').onclick=$('berries-register').onclick=$('add-member').onclick=()=>openEditor();
 async function compactOverviewCanvas(snapshot,sort,kind='ingredient'){
- // Use the exact board component and app stylesheet in a 1200px viewport.
- // The iframe prevents a phone's media queries from changing the four-column image.
- const frame=document.createElement('iframe');frame.title='一覧画像の生成';frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;frame.style.cssText='position:fixed;left:-14000px;top:0;width:1200px;height:1500px;border:0;pointer-events:none';
+ // Share-only layout; reuse the screen card renderers, calculations and state snapshot.
+ const frame=document.createElement('iframe');frame.title='一覧画像の生成';frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;frame.style.cssText='position:fixed;left:-14000px;top:0;width:600px;height:900px;border:0;pointer-events:none';
  const ready=new Promise((resolve,reject)=>{frame.onload=resolve;frame.onerror=()=>reject(new Error('画像用スタイルを読み込めませんでした'));});
  const sheetURL=new URL(document.querySelector('link[rel="stylesheet"]').href,location.href).href;
- frame.srcdoc=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><link rel="stylesheet" href="${sheetURL}"><style>body.export-sheet{margin:0;padding:24px;max-width:none;width:1200px;box-sizing:border-box;background:#f5f7ef}.export-sheet .harvest-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.export-sheet .harvest-tile{min-height:230px;padding:12px;gap:8px}.export-sheet .compact-top .compact-yield b,.export-sheet .target-yield{font-size:22px}.export-sheet .mini-person-name{font-size:15px}.export-sheet .card-level{font-size:13px}.export-sheet .berry-yield b{font-size:22px}.export-sheet .mini-nature{font-size:12px}.export-sheet .letter-slots{font-size:17px}.export-sheet .mini-skills{flex-wrap:wrap}.export-sheet .mini-skill{font-size:12px}.export-sheet .empty-ingredient{font-size:26px}.export-sheet h1{font:600 26px -apple-system,sans-serif;margin:0 0 8px;color:#294a39}.export-subtitle,.export-footnote{font-size:13px;line-height:1.7;color:#63745b;margin:0 0 16px}.export-footnote{margin:16px 0 0;white-space:pre-wrap}.export-sheet button{cursor:default}</style></head><body class="export-sheet"></body></html>`;
+ frame.srcdoc=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><link rel="stylesheet" href="${sheetURL}"><style>
+body.export-sheet{margin:0;padding:12px;max-width:none;width:600px;min-height:660px;box-sizing:border-box;background:#f5f7ef}
+.export-sheet .harvest-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:1fr;gap:8px}
+.export-sheet .harvest-tile{height:auto;min-height:214px;padding:8px;gap:3px;border-radius:9px}
+.export-sheet .food-card-title{font-size:16px;min-height:24px;line-height:1.3}
+.export-sheet .compact-top{min-height:28px}.export-sheet .compact-top .mini-slots>span{font-size:22px}
+.export-sheet .compact-top .compact-yield b,.export-sheet .target-yield,.export-sheet .berry-yield b{font-size:24px}
+.export-sheet .compact-identity{--nature-width:62px;grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr);min-height:46px;gap:3px}
+.export-sheet .compact-identity .mini-person-name{font-size:18px;white-space:normal;overflow:visible;line-height:1.25}
+.export-sheet .card-level{font-size:15px}.export-sheet .mini-nature{width:62px;height:30px;flex-wrap:nowrap}.export-sheet .mini-nature .up,.export-sheet .mini-nature .down,.export-sheet .mini-nature .neutral{font-size:14px;padding:0 2px}
+.export-sheet .compact-secondary{min-height:18px}.export-sheet .card-nickname{font-size:13px}
+.export-sheet .fixed-skills{min-height:0;gap:3px}.export-sheet .skill-row{gap:3px}.export-sheet .mini-skill{font-size:16px;min-height:26px;padding:2px 1px;line-height:1.15}
+.export-sheet .berry-yield{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:28px 24px;min-height:52px}.export-sheet .berry-type{font-size:16px;padding:3px 5px}.export-sheet .berry-name{font-size:16px}
+.export-subtitle{font-size:15px;line-height:1.5;color:#35543d;margin:0 0 8px;white-space:pre-line}
+.export-footnote{font-size:13px;line-height:1.5;color:#63745b;margin:8px 0 0;white-space:pre-wrap}.export-sheet button{cursor:default}
+</style></head><body class="export-sheet"></body></html>`;
  document.body.append(frame);
  try{
  await ready;const doc=frame.contentDocument,body=doc.body;
- const subtitle=doc.createElement('p');subtitle.className='export-subtitle';subtitle.textContent=`想定レベル：${snapshot.mode==='current'?'現在':`Lv.${snapshot.mode}`} ｜ いいキャンプ ${snapshot.camp?'ON':'OFF'} ｜ 最終進化 ${snapshot.evolution==='final'?'ON':'OFF'}`;body.append(subtitle);
- const grid=doc.createElement('div');grid.className='harvest-grid';grid.innerHTML=kind==='berry'?BerryView.render(snapshot,{...sort,filter:'all'}):BoardView.render({state:snapshot,items:BoardView.targetList('ingredient',snapshot,{...sort,filter:'all'})});body.append(grid);
- const levels=BoardView.targetList(kind,snapshot,{...sort,filter:'all'}).flatMap(i=>{const p=snapshot.pokemon.find(p=>p.id===(kind==='berry'?snapshot.berryAssignments:snapshot.assignments)[i.id]?.pokemonId);return p?[`${i.name} Lv.${C.effectiveLevel(p,snapshot.mode)}`]:[];});
- const note=doc.createElement('p');note.className='export-footnote';note.textContent=`計算レベル：${levels.join(' / ')||'担当未登録'}
-食＝食材確率 / 速＝速度（性格） / 所持＝最大所持数 / おてボ＝ボーナス / おてスピ＝速度 / きのみS＝きのみの数S
-並び順：${sort.by==='energy'?'エナジー':'デフォルト'}・${sort.direction==='desc'?'降順':'昇順'}
-色付き＝所持 / 薄灰＝未所持 / ?＝未確認 / 点線・·＝未解放 / 試＝想定で解放
-通常おてつだい24時間・げんき${snapshot.energy}固定・満杯前回収・本人補正とリボン・他個体/スキル/イベント等なし
-各担当を個別に稼働した期待値。実チームで3食作れる保証ではありません。Lv.80は将来試算・日量未計算。
+ const subtitle=doc.createElement('p');subtitle.className='export-subtitle';subtitle.textContent=`${kind==='berry'?'きのみ担当':'食材担当'} · ${BoardView.targetList(kind,snapshot,sort).length}件 · ${{all:'すべて',assigned:'担当あり',empty:'担当なし'}[sort.filter]}\n想定レベル：${snapshot.mode==='current'?'現在':`Lv.${snapshot.mode}`} ｜ いいキャンプ ${snapshot.camp?'ON':'OFF'} ｜ 最終進化 ${snapshot.evolution==='final'?'ON':'OFF'}`;body.append(subtitle);
+ const grid=doc.createElement('div');grid.className='harvest-grid';grid.innerHTML=kind==='berry'?BerryView.render(snapshot,sort):BoardView.render({state:snapshot,items:BoardView.targetList('ingredient',snapshot,sort)});body.append(grid);
+ const note=doc.createElement('p');note.className='export-footnote';note.textContent=`並び：${sort.by==='energy'?'エナジー':'デフォルト'}・${sort.direction==='desc'?'降順':'昇順'}。カード内Lv＝現在より下げない計算Lv。Lv.80は将来・日量未計算。
+実線＝現在解放 / 試＝想定で解放 / 点線・·＝未解放 / 薄灰＝未所持 / ?＝未確認
+通常おてつだい24時間・げんき${snapshot.energy}固定・満杯前回収・本人補正とリボン。スキル/他個体/イベント等なし。各担当の個別試算で、実チームの3食を保証しません。
 データ ${D.meta.version} / 計算 ${kind==='berry'?D.meta.berryCalcVersion:D.meta.calcVersion} / 自動選出 v1`;body.append(note);
  await doc.fonts.ready;
  const height=Math.ceil(body.scrollHeight);frame.style.height=height+'px';
- return await html2canvas(body,{scale:2,backgroundColor:'#f5f7ef',width:1200,height,windowWidth:1200,windowHeight:height,scrollX:0,scrollY:0,logging:false});
+ return await html2canvas(body,{scale:2,backgroundColor:'#f5f7ef',width:600,height,windowWidth:600,windowHeight:height,scrollX:0,scrollY:0,logging:false});
  }finally{frame.remove();}
 }
 let overviewObjectURL=null;
-function showOverview(canvas,blob,kind){
- const label=kind==='berry'?`全${D.berries.length}きのみ`:`${D.ingredients.length}食材`;$('overview-title').textContent=label+'の一覧画像';
+function showOverview(canvas,blob,kind,count){
+ const label=(kind==='berry'?'きのみ担当':'食材担当')+`-${count}件`;$('overview-title').textContent=label+'の一覧画像';
  if(overviewObjectURL)URL.revokeObjectURL(overviewObjectURL);overviewObjectURL=URL.createObjectURL(blob);
  const file=new File([blob],'ねむりの厳選手帳-'+label+'.png',{type:'image/png'}),preview=$('overview-preview');preview.innerHTML='';
  const img=document.createElement('img');img.src=overviewObjectURL;img.alt=label+'の担当と特徴を比較する縦長画像';preview.append(img);
@@ -167,8 +177,9 @@ function showOverview(canvas,blob,kind){
 async function exportOverview(kind='ingredient'){
  const snapshot=clone(state),sort=clone(viewOptions[kind==='berry'?'berries':'board']),button=$('share-open'),oldText=button.textContent;button.disabled=true;button.textContent='作成中…';
  try{
+ const count=BoardView.targetList(kind,snapshot,sort).length;if(!count){toast('表示中の担当カードがありません');return;}
  const canvas=await compactOverviewCanvas(snapshot,sort,kind);
- const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!blob)throw new Error('画像を生成できませんでした');showOverview(canvas,blob,kind);
+ const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));if(!blob)throw new Error('画像を生成できませんでした');showOverview(canvas,blob,kind,count);
  }catch{toast('画像を作成できませんでした。もう一度お試しください');}finally{button.disabled=false;button.textContent=oldText;}
 }
 
