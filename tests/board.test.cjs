@@ -61,6 +61,25 @@ assert.equal((B.render({...options,items:B.targetList('ingredient',s,{filter:'as
 assert.equal(JSON.stringify(s),sortSnapshot);assert.equal(JSON.stringify(D.ingredients),masterSnapshot);
 console.log('PASS actual assignment filters, adopted energy order/reverse, no mutation');
 
+// Switching away from energy, filtering and reselecting owners must preserve the specified ID order.
+const defaultIDs=['Leek','Mushroom','Egg','Potato','Apple','Herb','Sausage','Milk','Honey','Oil','Ginger','Tomato','Cacao','Tail','Soybean','Corn','Coffee','Pumpkin','Avocado'];
+const ids=opts=>Array.from(B.targetList('ingredient',s,opts),x=>x.id);
+for(const direction of ['asc','desc']){
+ const expected=direction==='asc'?defaultIDs:[...defaultIDs].reverse();
+ ids({by:'energy',direction});
+ assert.deepEqual(ids({by:'default',direction}),expected);
+ assert.deepEqual(ids({by:'default',direction,filter:'assigned'}),expected.filter(id=>['Sausage','Ginger'].includes(id)));
+ assert.deepEqual(ids({by:'default',direction,filter:'empty'}),expected.filter(id=>!['Sausage','Ginger'].includes(id)));
+ const selected=B.targetList('ingredient',s,{by:'default',direction});
+ const rendered=B.render({state:s,items:selected});
+ assert.deepEqual(Array.from(rendered.matchAll(/<article[^>]*aria-label="([^"]+)の担当"/g),m=>m[1]),Array.from(selected,x=>x.name));
+ const reassigned=C.autoAssign(s);
+ assert.deepEqual(Array.from(B.targetList('ingredient',reassigned,{by:'default',direction}),x=>x.id),expected);
+}
+assert.equal(JSON.stringify(s),sortSnapshot);assert.equal(JSON.stringify(D.ingredients),masterSnapshot);
+console.log('PASS specified default order, energy round trip, both directions/filters, common rendered order, automatic reassignment and unchanged masters');
+
+
 assert(!compact.includes('食材並び ABC'));assert(!compact.includes('letter-slots'));
 assert(B.miniSlots({...p,slots:['Sausage','Sausage','Herb']},'current',false).includes('🥩'));assert(!B.miniSlots(p,'70',false).includes('<sup>'));
 assert(B.nature({...p,nature:'QUIET'},true,'berry').includes('―'));assert(!B.nature({...p,nature:'QUIET'},true,'berry').includes('食↑'));assert(B.nature({...p,nature:'BRAVE'},true,'berry').includes('速↑'));

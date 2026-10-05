@@ -24,11 +24,11 @@ function miniSlots(p,mode,markers=true){return `<span class="mini-slots" aria-la
 function slotLetters(p){const sp=C.species(p.species),ids=sp?[...new Set(sp.slots.flat().map(s=>s.id))]:[];return p.slots.map(id=>{const i=ids.indexOf(id);return i>=0&&i<3?'ABC'[i]:'?';});}
 function letterSlots(p,mode){return `<strong class="letter-slots" aria-label="食材並び ${slotLetters(p).join('')}">${slotLetters(p).map((letter,i)=>{const status=C.slotStatus(p,C.ING_LEVELS[i],mode);return `<span class="${status}" title="${i+1}枠目・${statusName[status]}">${letter}</span>`;}).join('')}</strong>`;}
 function daily(p,mode,energy,options={}){const r=C.calc(p,mode,energy,options);return {result:r,items:r.ok?Object.entries(r.counts).filter(([,v])=>v>0):[]};}
-const specifiedOrder=['Leek','Mushroom','Egg','Potato','Apple','Herb','Sausage','Milk','Honey','Oil','Ginger','Tomato','Cacao','Tail','Soybean','Corn','Coffee','Pumpkin','Avocado'];
-function orderedIngredients(mode='energy'){return mode==='specified'?specifiedOrder.map(id=>C.ingredient(id)):[...D.ingredients];}
+const defaultIngredientOrder=Object.freeze(['Leek','Mushroom','Egg','Potato','Apple','Herb','Sausage','Milk','Honey','Oil','Ginger','Tomato','Cacao','Tail','Soybean','Corn','Coffee','Pumpkin','Avocado']);
+function orderedIngredients(mode='default'){return mode==='energy'?[...D.ingredients]:defaultIngredientOrder.map(id=>C.ingredient(id));}
 function dailyHTML(p,state,target){const {result:r,items}=daily(p,state.mode,state.energy,state);const entries=r.ok?[[target,r.counts[target]]]:[];return `<div class="compact-yield" aria-label="1日の食材別推定収集数">${r.ok?entries.map(([id,v],i)=>i===0?`<button class="target-yield" data-assign="${id}" title="${esc(C.ingredient(id).name)} ${v.toFixed(1)}個 / 24時間・担当を編集"><b>${v.toFixed(1)}</b></button>`:`<b title="${esc(C.ingredient(id).name)} ${v.toFixed(1)}個 / 24時間">${v.toFixed(1)}</b>`).join(''):`<button class="target-yield" data-assign="${target}" title="${esc(r.errors.join(' / '))}">—</button><small>${r.level>70?'将来・未計算':r.errors[0]?.includes('進化先')?'進化先を選択':'条件不足・詳細へ'}</small>`}</div>`;}
 function time(seconds){const s=Math.round(seconds);return `${Math.floor(s/3600)}:${String(Math.floor(s%3600/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;}
-function render({state,list=D.ingredients,sort='energy',items=null}){
+function render({state,list=D.ingredients,sort='default',items=null}){
  const owner=id=>state.pokemon.find(p=>p.id===state.assignments[id]?.pokemonId);
  return (items||orderedIngredients(sort)).map(ing=>{const p=owner(ing.id),a=state.assignments[ing.id],match=list.some(i=>i.id===ing.id);return `<article class="harvest-tile ${p?'assigned':'unassigned'} ${match?'':'search-muted'}" aria-label="${esc(ing.name)}の担当">${p?`<h3 class="food-card-title">${esc(ing.name)}</h3><div class="compact-top">${miniSlots(p,state.mode,false)}${dailyHTML(p,state,ing.id)}</div>${identity(p,state)}${skills(p,state.mode)}`:`<button class="food-card-title empty-ingredient" data-assign="${ing.id}" aria-label="${esc(ing.name)}の担当を登録">${esc(ing.name)}</button><div class="compact-top empty-food-top"><span>―</span><b>―</b></div><div class="empty-owner" aria-label="未選出・計算可能な対象個体なし"></div>`}</article>`;}).join('');
 
@@ -36,7 +36,7 @@ function render({state,list=D.ingredients,sort='energy',items=null}){
 }
 function targetList(kind,state,options={}){
  const master=kind==='berry'?D.berries:D.ingredients,assignments=kind==='berry'?state.berryAssignments:state.assignments;
- let items=[...master];
+ let items=kind==='ingredient'?orderedIngredients(options.by||'default'):[...master];
  if(options.by==='energy'&&kind==='berry')items.sort((a,b)=>a.value-b.value||master.indexOf(a)-master.indexOf(b));
  if(options.direction==='desc')items.reverse();
  const assigned=i=>state.pokemon.some(p=>p.id===assignments[i.id]?.pokemonId);
