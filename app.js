@@ -126,25 +126,26 @@ $('pokemon-form').addEventListener('submit',savePokemon);
 $('delete-pokemon').onclick=()=>{const id=$('pokemon-id').value;if(!confirm('この個体と、この個体に紐づく担当設定を削除しますか？'))return;const next=C.removePokemon(state,id);if(commit(next,'個体を削除しました'))$('editor').close();};
 $('board-register').onclick=$('berries-register').onclick=$('add-member').onclick=()=>openEditor();
 async function compactOverviewCanvas(snapshot,sort,kind='ingredient'){
- // Share-only layout; reuse the screen card renderers, calculations and state snapshot.
- const frame=document.createElement('iframe');frame.title='一覧画像の生成';frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;frame.style.cssText='position:fixed;left:-14000px;top:0;width:600px;height:900px;border:0;pointer-events:none';
+ // Share-only four-column layout. CSS pixels and PNG resolution are independent.
+ const sheetWidth=720,renderScale=3;
+ const frame=document.createElement('iframe');frame.title='一覧画像の生成';frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;frame.style.cssText=`position:fixed;left:-14000px;top:0;width:${sheetWidth}px;height:900px;border:0;pointer-events:none`;
  const ready=new Promise((resolve,reject)=>{frame.onload=resolve;frame.onerror=()=>reject(new Error('画像用スタイルを読み込めませんでした'));});
  const sheetURL=new URL(document.querySelector('link[rel="stylesheet"]').href,location.href).href;
  frame.srcdoc=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><link rel="stylesheet" href="${sheetURL}"><style>
-body.export-sheet{margin:0;padding:12px;max-width:none;width:600px;min-height:660px;box-sizing:border-box;background:#f5f7ef}
-.export-sheet .harvest-grid{grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:1fr;gap:8px}
-.export-sheet .harvest-tile{height:auto;min-height:214px;padding:8px;gap:3px;border-radius:9px}
-.export-sheet .food-card-title{font-size:16px;min-height:24px;line-height:1.3}
-.export-sheet .compact-top{min-height:28px}.export-sheet .compact-top .mini-slots>span{font-size:22px}
-.export-sheet .compact-top .compact-yield b,.export-sheet .target-yield,.export-sheet .berry-yield b{font-size:24px}
-.export-sheet .compact-identity{--nature-width:62px;grid-template-columns:minmax(0,1fr) 44px minmax(0,1fr);min-height:46px;gap:3px}
-.export-sheet .compact-identity .mini-person-name{font-size:18px;white-space:normal;overflow:visible;line-height:1.25}
-.export-sheet .card-level{font-size:15px}.export-sheet .mini-nature{width:62px;height:30px;flex-wrap:nowrap}.export-sheet .mini-nature .up,.export-sheet .mini-nature .down,.export-sheet .mini-nature .neutral{font-size:14px;padding:0 2px}
-.export-sheet .compact-secondary{min-height:18px}.export-sheet .card-nickname{font-size:13px}
-.export-sheet .fixed-skills{min-height:0;gap:3px}.export-sheet .skill-row{gap:3px}.export-sheet .mini-skill{font-size:16px;min-height:26px;padding:2px 1px;line-height:1.15}
-.export-sheet .berry-yield{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:28px 24px;min-height:52px}.export-sheet .berry-type{font-size:16px;padding:3px 5px}.export-sheet .berry-name{font-size:16px}
-.export-subtitle{font-size:15px;line-height:1.5;color:#35543d;margin:0 0 8px;white-space:pre-line}
-.export-footnote{font-size:13px;line-height:1.5;color:#63745b;margin:8px 0 0;white-space:pre-wrap}.export-sheet button{cursor:default}
+body.export-sheet{margin:0;padding:8px;max-width:none;width:${sheetWidth}px;box-sizing:border-box;background:#f5f7ef}
+.export-sheet .harvest-grid{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:1fr;gap:4px}
+.export-sheet .harvest-tile,.export-sheet .harvest-tile.unassigned{height:auto;min-height:192px;min-width:0;margin:0;padding:4px;gap:2px;border-radius:7px}
+.export-sheet .harvest-tile .food-card-title{font-size:16px;min-height:25px;line-height:1.2}
+.export-sheet .compact-top{min-height:28px;gap:2px}.export-sheet .compact-top .compact-yield{margin:0;padding:0;gap:0;border:0}.export-sheet .compact-top .mini-slots{gap:1px;min-width:0}.export-sheet .compact-top .mini-slots>span{font-size:19px}
+.export-sheet .compact-top .compact-yield b,.export-sheet .target-yield,.export-sheet .berry-yield b{font-size:23px;line-height:1.1}
+.export-sheet .compact-identity{--nature-width:42px;grid-template-columns:minmax(0,1fr) 31px 42px;min-height:46px;gap:1px}
+.export-sheet .compact-identity .mini-person{min-width:0;min-height:0;padding:0}.export-sheet .compact-identity .mini-person-name{font-size:17px;white-space:normal;overflow:visible;line-height:1.15}
+.export-sheet .card-level{font-size:12px}.export-sheet .mini-nature{width:42px;height:29px;min-height:29px;flex-wrap:wrap;padding:0;gap:0}.export-sheet .mini-nature .up,.export-sheet .mini-nature .down,.export-sheet .mini-nature .neutral{font-size:11px;min-height:12px;line-height:1.1;padding:0 1px}
+.export-sheet .compact-secondary{min-height:14px}.export-sheet .card-nickname{font-size:11px;line-height:1.2}
+.export-sheet .fixed-skills{min-height:0;gap:2px}.export-sheet .fixed-skills .skill-row{gap:2px;min-height:23px}.export-sheet .fixed-skills .mini-skill{font-size:10px;min-height:23px;padding:1px 0;line-height:1.1;min-width:0}
+.export-sheet .berry-yield{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:28px 25px;min-height:53px;gap:0 2px}.export-sheet .berry-yield .berry-type{font-size:12px;padding:2px 3px;min-width:0;line-height:1.1}.export-sheet .berry-yield .berry-name{font-size:16px;line-height:1.2}
+.export-subtitle{font-size:13px;line-height:1.3;color:#35543d;margin:0 0 5px;white-space:pre-line}
+.export-footnote{font-size:10px;line-height:1.3;color:#63745b;margin:5px 0 0;white-space:pre-wrap}.export-sheet button{cursor:default}
 </style></head><body class="export-sheet"></body></html>`;
  document.body.append(frame);
  try{
@@ -157,7 +158,7 @@ body.export-sheet{margin:0;padding:12px;max-width:none;width:600px;min-height:66
 データ ${D.meta.version} / 計算 ${kind==='berry'?D.meta.berryCalcVersion:D.meta.calcVersion} / 自動選出 v1`;body.append(note);
  await doc.fonts.ready;
  const height=Math.ceil(body.scrollHeight);frame.style.height=height+'px';
- return await html2canvas(body,{scale:2,backgroundColor:'#f5f7ef',width:600,height,windowWidth:600,windowHeight:height,scrollX:0,scrollY:0,logging:false});
+ return await html2canvas(body,{scale:renderScale,backgroundColor:'#f5f7ef',width:sheetWidth,height,windowWidth:sheetWidth,windowHeight:height,scrollX:0,scrollY:0,logging:false});
  }finally{frame.remove();}
 }
 let overviewObjectURL=null;
@@ -165,7 +166,7 @@ function showOverview(canvas,blob,kind,count){
  const label=(kind==='berry'?'きのみ担当':'食材担当')+`-${count}件`;$('overview-title').textContent=label+'の一覧画像';
  if(overviewObjectURL)URL.revokeObjectURL(overviewObjectURL);overviewObjectURL=URL.createObjectURL(blob);
  const file=new File([blob],'ねむりの厳選手帳-'+label+'.png',{type:'image/png'}),preview=$('overview-preview');preview.innerHTML='';
- const img=document.createElement('img');img.src=overviewObjectURL;img.alt=label+'の担当と特徴を比較する縦長画像';preview.append(img);
+ const img=document.createElement('img');img.src=overviewObjectURL;img.alt=label+'の担当と特徴を比較する4列の画像';preview.append(img);
  const actions=document.createElement('div');actions.className='overview-actions';
  const save=document.createElement('a');save.href=overviewObjectURL;save.download=file.name;save.textContent='画像を保存';save.className='button primary';save.id='overview-save';actions.append(save);
  let supported=false;try{supported=!!navigator.share&&!!navigator.canShare&&navigator.canShare({files:[file]});}catch{}
