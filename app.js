@@ -25,12 +25,12 @@ function slotsHTML(p){const sp=C.species(p.species);return `<div class="slot-tra
 function skillsHTML(p,all=false){const list=p.subskills.map((id,i)=>({id,i,s:C.skill(id)})).filter(x=>all||x.s?.important);return `<div class="skill-chips">${list.map(({i,s})=>`<span class="skill-chip rarity-${s?.rarity||'white'} ${s?.rarity==='gold'?'gold':''} ${C.slotStatus(p,C.SKILL_LEVELS[i],state.mode)}">${esc(s?.name||'未入力')}<span class="skill-level">Lv.${C.SKILL_LEVELS[i]}${C.slotStatus(p,C.SKILL_LEVELS[i],state.mode)==='projected'?' 試算':C.slotStatus(p,C.SKILL_LEVELS[i],state.mode)==='locked'?' 未解放':''}</span></span>`).join('')||'<span class="muted small">重要スキルの登録なし</span>'}</div>`;}
 function levelLabel(p){const l=C.effectiveLevel(p,state.mode);return state.mode==='current'?`現在 Lv.${p.level}`:`現在 ${p.level} → 計算 Lv.${l}${l>D.meta.calcCap?'（将来）':''}`;}
 function ingredientLabel(ing,p,result=null){return `<div class="ingredient-label"><span class="ingredient-icon" aria-hidden="true">${ing.icon}</span><div><h3>${esc(ing.name)}</h3>${p?`<button class="text-button" data-detail="${esc(p.id)}">${esc(BoardView.displaySpecies(p,state,result))}</button><span class="level-text">${levelLabel(p)}</span>`:'<span class="level-text">担当未登録</span>'}</div></div>`;}
-function simulationLabel(s=state){return `${s.evolution==='auto'?'おまかせ（対象ごとに比較）':s.evolution==='final'?'最終進化想定':'登録個体のまま'}・キャンプ${s.camp?'ON':'OFF'}`;}
+function simulationLabel(s=state){return `${s.evolution==='auto'?'リボン込（対象ごとに比較）':s.evolution==='final'?'最終進化想定':'登録個体のまま'}・キャンプ${s.camp?'ON':'OFF'}`;}
 function renderSimulation(){ $('evolution-mode').value=state.evolution;$('camp-mode').checked=state.camp;const branches=state.evolution!=='current'?state.pokemon.filter(p=>C.finalSpecies(p.species).length>1):[];$('final-form-choices').hidden=!branches.length;$('final-form-choices').innerHTML=branches.map(p=>`<label>${esc(pokemonName(p))}の最終進化先<select data-final-form="${esc(p.id)}"><option value="">選択してください</option>${C.finalSpecies(p.species).map(id=>`<option value="${esc(id)}" ${state.finalForms[p.id]===id?'selected':''}>${esc(C.species(id).name)}</option>`).join('')}</select></label>`).join('');}
 function render(){
  renderSimulation();
  $('member-count').textContent=state.pokemon.length;
- document.querySelectorAll('[data-level]').forEach(b=>b.classList.toggle('active',b.dataset.level===state.mode));$('energy-summary').textContent=state.energy;$('future-notice').hidden=state.mode!=='80';
+ $('level-select').value=state.mode;$('energy-summary').textContent=state.energy;$('future-notice').hidden=state.mode!=='80';
  $('save-status').textContent=state.updatedAt?'保存済み '+new Date(state.updatedAt).toLocaleString('ja-JP',{month:'numeric',day:'numeric',hour:'2-digit',minute:'2-digit'}):'未登録';
  renderBoard();renderBerries();renderMembers();renderCooking();renderMaps();renderSources();
 }
@@ -158,14 +158,14 @@ body.export-sheet{margin:0;padding:8px;max-width:none;width:${sheetWidth}px;box-
 .export-sheet .compact-secondary{min-height:14px}.export-sheet .card-nickname{font-size:11px;line-height:1.2}
 .export-sheet .fixed-skills{min-height:0;gap:2px}.export-sheet .fixed-skills .skill-row{gap:2px;min-height:23px}.export-sheet .fixed-skills .mini-skill{font-size:10px;min-height:23px;padding:1px 0;line-height:1.1;min-width:0}
 .export-sheet .berry-yield{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:28px 25px;min-height:53px;gap:0 2px}.export-sheet .berry-yield .berry-type{font-size:12px;padding:2px 3px;min-width:0;line-height:1.1}.export-sheet .berry-yield .berry-name{font-size:16px;line-height:1.2}
-.export-sheet .food-card-title .food-title-text{font-size:14px}.export-sheet .food-card-title .target-yield b{font-size:23px}.export-sheet .sleep-ribbon{font-size:9px;gap:1px}.export-sheet .sleep-ribbon svg{width:8px;height:11px}.export-sheet .mini-nature :is(.up,.down,.neutral){font-weight:700;padding:0 1px}
+.export-sheet .food-card-title .food-title-text{font-size:14px}.export-sheet .food-production-row .target-yield b{font-size:23px}.export-sheet .sleep-ribbon{font-size:9px;gap:1px}.export-sheet .sleep-ribbon svg{width:8px;height:11px}.export-sheet .mini-nature :is(.up,.down,.neutral){font-weight:700;padding:0 1px}
 .export-subtitle{font-size:13px;line-height:1.3;color:#35543d;margin:0 0 5px;white-space:pre-line}
 .export-footnote{font-size:10px;line-height:1.3;color:#63745b;margin:5px 0 0;white-space:pre-wrap}.export-sheet button{cursor:default}
 </style></head><body class="export-sheet"></body></html>`;
  document.body.append(frame);
  try{
  await ready;const doc=frame.contentDocument,body=doc.body;
- const subtitle=doc.createElement('p');subtitle.className='export-subtitle';subtitle.textContent=`${kind==='berry'?'きのみ担当':'食材担当'} · ${BoardView.targetList(kind,snapshot,sort).length}件 · ${{all:'すべて',assigned:'担当あり',empty:'担当なし'}[sort.filter]}\n想定レベル：${snapshot.mode==='current'?'現在':`Lv.${snapshot.mode}`} ｜ いいキャンプ ${snapshot.camp?'ON':'OFF'} ｜ 進化 ${snapshot.evolution==='auto'?'おまかせ':snapshot.evolution==='final'?'最終進化':'登録個体のまま'}`;body.append(subtitle);
+ const subtitle=doc.createElement('p');subtitle.className='export-subtitle';subtitle.textContent=`${kind==='berry'?'きのみ担当':'食材担当'} · ${BoardView.targetList(kind,snapshot,sort).length}件 · ${{all:'すべて',assigned:'担当あり',empty:'担当なし'}[sort.filter]}\nLv：${snapshot.mode==='current'?'現在':`Lv.${snapshot.mode}`} ｜ キャンチケ ${snapshot.camp?'ON':'OFF'} ｜ 進化 ${snapshot.evolution==='auto'?'リボン込':snapshot.evolution==='final'?'最終進化':'現在'}`;body.append(subtitle);
  const grid=doc.createElement('div');grid.className='harvest-grid';grid.innerHTML=kind==='berry'?BerryView.render(snapshot,sort):BoardView.render({state:snapshot,items:BoardView.targetList('ingredient',snapshot,sort)});body.append(grid);
  const note=doc.createElement('p');note.className='export-footnote';note.textContent=`並び：${sort.by==='energy'?'エナジー':'デフォルト'}・${sort.direction==='desc'?'降順':'昇順'}。カード内Lv＝現在より下げない計算Lv。Lv.80は将来・日量未計算。
 実線＝現在解放 / 試＝想定で解放 / 点線・·＝未解放 / 薄灰＝未所持 / ?＝未確認
@@ -204,6 +204,7 @@ for(const view of ['board','berries']){for(const [suffix,key] of [['order','by']
 $('evolution-mode').onchange=()=>commit({...state,evolution:$('evolution-mode').value});
 $('camp-mode').onchange=()=>commit({...state,camp:$('camp-mode').checked});
 $('final-form-choices').addEventListener('change',e=>{const id=e.target.dataset.finalForm;if(!id)return;const finalForms={...state.finalForms};if(e.target.value)finalForms[id]=e.target.value;else delete finalForms[id];commit({...state,finalForms});});
+$('level-select').onchange=()=>commit({...state,mode:$('level-select').value});
 $('condition-open').onclick=()=>{$('energy-select').value=state.energy;open('conditions');};
 $('conditions-save').onclick=()=>{if(commit({...state,energy:Number($('energy-select').value)},'比較条件を更新しました'))$('conditions').close();};
 $('recipe-category').onchange=()=>{const recipe=D.recipes.find(r=>r.category===$('recipe-category').value);commit({...state,recipeId:recipe.id});};

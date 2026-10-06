@@ -88,3 +88,5 @@ console.log('PASS actual slot icons without letters/markers, target-only yield, 
 const foongus={...p,species:'FOONGUS',nickname:'そのまま',slots:['Mushroom','Egg','Tomato']},unchangedFoongus=JSON.stringify(foongus);
 assert.equal(B.displaySpecies(foongus,{evolution:'current'}),'タマゲタケ');assert.equal(B.displaySpecies(foongus,{evolution:'final'}),'モロバレル');assert(B.identity(foongus,{mode:'60',evolution:'final'}).includes('そのまま'));assert.equal(JSON.stringify(foongus),unchangedFoongus);
 console.log('PASS Foongus final display with unchanged nickname and registered species');
+for(const ribbon of [null,0]){const html=B.sleepRibbon({...p,ribbon});assert(html.includes('<span>―</span>'));assert(!html.includes('<span>?</span>'));}
+assert(B.sleepRibbon({...p,ribbon:null}).includes('おやすみリボン：未入力'));assert(B.sleepRibbon({...p,ribbon:4}).includes('2,000'));console.log('PASS ribbon missing/none share the dash while underlying stage and accessible description stay distinct');
