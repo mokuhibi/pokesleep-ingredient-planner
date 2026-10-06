@@ -141,14 +141,14 @@ $('delete-pokemon').onclick=()=>{const id=$('pokemon-id').value;if(!confirm('こ
 $('board-register').onclick=$('berries-register').onclick=$('add-member').onclick=()=>openEditor();
 async function compactOverviewCanvas(snapshot,sort,kind='ingredient'){
  // Share-only four-column layout. CSS pixels and PNG resolution are independent.
- const sheetWidth=720,renderScale=3;
+ const foodExport=kind==='ingredient',sheetWidth=foodExport?680:720,renderScale=3;
  const frame=document.createElement('iframe');frame.title='一覧画像の生成';frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;frame.style.cssText=`position:fixed;left:-14000px;top:0;width:${sheetWidth}px;height:900px;border:0;pointer-events:none`;
  const ready=new Promise((resolve,reject)=>{frame.onload=resolve;frame.onerror=()=>reject(new Error('画像用スタイルを読み込めませんでした'));});
  const sheetURL=new URL(document.querySelector('link[rel="stylesheet"]').href,location.href).href;
  frame.srcdoc=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><link rel="stylesheet" href="${sheetURL}"><style>
-body.export-sheet{margin:0;padding:8px;max-width:none;width:${sheetWidth}px;box-sizing:border-box;background:#f5f7ef}
-.export-sheet .harvest-grid{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:1fr;gap:4px}
-.export-sheet .harvest-tile,.export-sheet .harvest-tile.unassigned{height:auto;min-height:192px;min-width:0;margin:0;padding:4px;gap:2px;border-radius:7px}
+body.export-sheet{margin:0;padding:${foodExport?6:8}px;max-width:none;width:${sheetWidth}px;box-sizing:border-box;background:#f5f7ef}
+.export-sheet .harvest-grid{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:1fr;gap:${foodExport?3:4}px}
+.export-sheet .harvest-tile,.export-sheet .harvest-tile.unassigned{height:auto;min-height:192px;min-width:0;margin:0;padding:${foodExport?3:4}px;gap:${foodExport?1:2}px;border-radius:7px}
 .export-sheet .harvest-tile .food-card-title{font-size:16px;min-height:25px;line-height:1.2}
 .export-sheet .compact-top{min-height:28px;gap:2px}.export-sheet .compact-top .compact-yield{margin:0;padding:0;gap:0;border:0}.export-sheet .compact-top .mini-slots{gap:1px;min-width:0}.export-sheet .compact-top .mini-slots>span{font-size:19px}
 .export-sheet .compact-top .compact-yield b,.export-sheet .target-yield,.export-sheet .berry-yield b{font-size:23px;line-height:1.1}
