@@ -158,3 +158,20 @@ body{padding-bottom:calc(82px + env(safe-area-inset-bottom,0px))}.tabs{position:
 .harvest-tile .mini-nature .up{color:#244f38;background:#e7eee1}
 .harvest-tile .mini-nature .down{color:#87503f;background:#f5e9e1}
 .harvest-tile .mini-nature .neutral{color:#788474;font-weight:600}
+/* Card header structure is shared by the screen and four-column export. */
+.food-card-title .compact-yield{flex-shrink:0;min-width:0;margin:0;padding:0;border:0}
+.food-card-title .target-yield{margin:0;padding:0;border:0;text-align:right}
+.harvest-tile .food-card-title .target-yield b{font-size:18px;line-height:1.2}
+.harvest-tile .empty-ingredient{padding:0;border:0;background:none;color:inherit;font-weight:600;text-align:left}
+.empty-food-count{font-size:18px;color:#879482}
+.compact-top .sleep-ribbon{justify-self:end}
+.berry-yield b{grid-row:1}.berry-yield .sleep-ribbon{grid-row:2}
+.tabs{grid-template-columns:repeat(6,minmax(0,1fr))}
+.evolution-control{display:flex;align-items:center;gap:6px;font-size:12px;color:#52634c}
+.evolution-control select,.map-picker select,.map-favorites select{font-size:16px;min-height:44px;border:1px solid #d7dfd0;border-radius:7px;background:white;color:#35543d;padding:6px}
+.map-picker{display:flex;align-items:center;gap:12px;margin-bottom:10px}.map-picker select{flex:1;max-width:420px;min-width:0}
+.map-favorites{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.map-favorites label{display:grid;gap:3px;font-size:12px;min-width:0}.map-favorites select{width:100%;min-width:0}
+.relation-card{border:1px solid #dfe5dc;border-radius:10px;background:white;padding:8px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.relation-card h3{font-size:12px;margin:0;line-height:1.4}.relation-card small{font-size:11px;color:#75816e}.relation-card b{font-size:18px}.relation-card .text-button{text-align:left;font-size:13px;padding:0}
+#view-sources #backup-menu{margin-bottom:12px}
+@media(max-width:740px){.tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.tabs .tab{min-height:42px;font-size:12px;padding:8px 4px}body{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}.cooking-ingredient-grid{grid-auto-rows:auto}.map-favorites{grid-template-columns:1fr}.simulation-toggles{align-items:stretch;flex-wrap:wrap}.evolution-control{flex-wrap:wrap}}

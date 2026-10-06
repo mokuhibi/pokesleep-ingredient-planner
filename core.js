@@ -12,8 +12,18 @@ const unlocked=(level,threshold)=>level>=threshold;
 function slotStatus(p,threshold,mode){return p.level>=threshold?'active':effectiveLevel(p,mode)>=threshold?'projected':'locked';}
 function finalSpecies(id,seen=new Set()){if(seen.has(id))return [];const sp=species(id);if(!sp)return [];const next=new Set(seen).add(id);return sp.evolvesInto?.length?[...new Set(sp.evolvesInto.flatMap(x=>finalSpecies(x,next)))]:[id];}
 function simulatedSpecies(p,options={}){if(options.evolution!=='final')return species(p.species);const choices=finalSpecies(p.species);const selected=options.finalForms?.[p.id];return species(choices.length===1?choices[0]:choices.includes(selected)?selected:'');}
-function calc(p,mode,energy,options={}){
- return production(p,mode,energy,options,true);
+function formResults(p,mode,energy,options,producer){
+ const variants=['current','final'].map(evolution=>producer(p,mode,energy,{...options,evolution}));
+ // Never claim a winning form when the other form cannot be calculated.
+ return variants;
+}
+function bestForm(rows,value){return rows.reduce((best,r)=>!best||value(r)>value(best)?r:best,null);}
+function calc(p,mode,energy,options={},target=null){
+ if(options.evolution!=='auto')return production(p,mode,energy,options,true);
+ if(!ingredient(target))return {ok:false,level:effectiveLevel(p,mode),errors:['おまかせは対象食材ごとに比較します。担当カードを確認してください']};
+ const rows=formResults(p,mode,energy,options,(p,m,e,o)=>production(p,m,e,o,true));
+ if(rows.some(r=>!r.ok))return {ok:false,level:effectiveLevel(p,mode),errors:[...new Set(rows.filter(r=>!r.ok).flatMap(r=>r.errors))]};
+ return {...bestForm(rows,r=>r.counts[target]),automatic:true,comparisonTarget:target};
 }
 function production(p,mode,energy,options,withIngredients){
  const level=effectiveLevel(p,mode),errors=[]; const sp=simulatedSpecies(p,options),n=nature(p.nature);
@@ -33,9 +43,7 @@ function production(p,mode,energy,options,withIngredients){
  const amount=id=>ids.has(id)?skill(id).amount:0;
  const speed=Math.max(.65,1-amount('HELPING_SPEED_S')-amount('HELPING_SPEED_M')-amount('HELPING_BONUS'));
  const rate=sp.ingredientRate*n.ingredient*(1+amount('INGREDIENT_FINDER_S')+amount('INGREDIENT_FINDER_M'));
- let ribbon=1;
- if(p.ribbon>=2)ribbon-=sp.remainingEvolutions===2?.11:sp.remainingEvolutions===1?.05:0;
- if(p.ribbon>=4)ribbon-=sp.remainingEvolutions===2?.14:sp.remainingEvolutions===1?.07:0;
+ const ribbon=D.ribbons.find(x=>x.stage===p.ribbon)?.frequencyByRemainingEvolutions[sp.remainingEvolutions]??1;
  const combined=Math.round((2-n.frequency)*speed*(1-.002*(level-1))*ribbon*10000)/10000;
  const baseInterval=Math.floor(combined*sp.frequency/(options.camp?1.2:1));
  const energyFactor=energy>=80?.45:energy>=60?.52:energy>=40?.58:energy>=1?.66:1;
@@ -48,6 +56,12 @@ function production(p,mode,energy,options,withIngredients){
 // calculateAverageProduce. Same normal-help conditions as ingredient estimates.
 function berryPower(id,level){const b=berry(id);return b&&Number.isInteger(level)&&level>=1&&level<=D.meta.calcCap?Math.round(Math.max(b.value+level-1,b.value*Math.pow(1.025,level-1))):null;}
 function calcBerry(p,mode,energy,options={},target=null){
+ if(options.evolution==='auto'){
+ const rows=formResults(p,mode,energy,options,(p,m,e,o)=>calcBerry(p,m,e,o));
+ if(rows.some(r=>!r.ok))return {ok:false,level:effectiveLevel(p,mode),errors:[...new Set(rows.filter(r=>!r.ok).flatMap(r=>r.errors))]};
+ const eligible=rows.filter(r=>!target||r.berryId===target);
+ return eligible.length?{...bestForm(eligible,r=>r.berryEnergy),automatic:true}:{ok:false,level:effectiveLevel(p,mode),errors:['現在の姿・最終進化とも対象のきのみを集めません']};
+ }
  const r=production(p,mode,energy,options,false);if(!r.ok)return r;
  const sp=species(r.calculationSpecies),b=berry(sp.berry);
  if(!b)return {ok:false,level:r.level,errors:['きのみの基礎データが未対応です']};
@@ -70,16 +84,19 @@ function autoAssign(input){
  const state=JSON.parse(JSON.stringify(input)),history=state.assignmentHistory||{},berryHistory=state.berryAssignmentHistory||{};
  for(const [id,a] of Object.entries(state.assignments))history[id]={...(history[id]||{}),[a.pokemonId]:{...a}};
  for(const [id,a] of Object.entries(state.berryAssignments))berryHistory[id]=[...new Set([...(berryHistory[id]||[]),a.pokemonId])];
- const food=[],berries=[];
- for(const p of state.pokemon){const sp=simulatedSpecies(p,state);if(sp?.specialty==='ingredient'){const r=calc(p,state.mode,state.energy,state);if(r.ok)food.push({p,r});}if(sp?.specialty==='berry'){const r=calcBerry(p,state.mode,state.energy,state);if(r.ok)berries.push({p,r});}}
  const best=(rows,value,previous)=>rows.filter(x=>Number.isFinite(value(x))&&value(x)>0).sort((a,b)=>value(b)-value(a)||(a.p.id===previous?-1:b.p.id===previous?1:a.p.id<b.p.id?-1:a.p.id>b.p.id?1:0))[0];
  const assignments={},berryAssignments={};
- for(const ing of D.ingredients){const winner=best(food,x=>x.r.counts[ing.id],state.assignments[ing.id]?.pokemonId);if(winner){const id=winner.p.id,records=history[ing.id]||{},record=Object.prototype.hasOwnProperty.call(records,id)?records[id]:null;assignments[ing.id]=record?{...record}:{pokemonId:id,complete:false,note:'',completedAt:null};}}
- for(const b of D.berries){const winner=best(berries.filter(x=>x.r.berryId===b.id),x=>x.r.berryEnergy,state.berryAssignments[b.id]?.pokemonId);if(winner)berryAssignments[b.id]={pokemonId:winner.p.id};}
+ for(const ing of D.ingredients){
+ const rows=state.pokemon.map(p=>({p,r:calc(p,state.mode,state.energy,state,ing.id)})).filter(x=>x.r.ok&&species(x.r.calculationSpecies)?.specialty==='ingredient');
+ const winner=best(rows,x=>x.r.counts[ing.id],state.assignments[ing.id]?.pokemonId);
+ if(winner){const id=winner.p.id,records=history[ing.id]||{},record=Object.prototype.hasOwnProperty.call(records,id)?records[id]:null;assignments[ing.id]=record?{...record}:{pokemonId:id,complete:false,note:'',completedAt:null};}}
+ for(const b of D.berries){
+ const rows=state.pokemon.map(p=>({p,r:calcBerry(p,state.mode,state.energy,state,b.id)})).filter(x=>x.r.ok&&species(x.r.calculationSpecies)?.specialty==='berry');
+ const winner=best(rows,x=>x.r.berryEnergy,state.berryAssignments[b.id]?.pokemonId);if(winner)berryAssignments[b.id]={pokemonId:winner.p.id};}
  return {...state,assignments,berryAssignments,assignmentHistory:history,berryAssignmentHistory:berryHistory};
 }
 function compare(state,recipe){return recipe.ingredients.map(x=>{
- const a=state.assignments[x.id],p=a&&state.pokemon.find(p=>p.id===a.pokemonId),result=p?calc(p,state.mode,state.energy,state):null;
+ const a=state.assignments[x.id],p=a&&state.pokemon.find(p=>p.id===a.pokemonId),result=p?calc(p,state.mode,state.energy,state,x.id):null;
  const quantity=result?.ok?result.counts[x.id]:null;
  return {...x,need:x.amount*3,pokemon:p,result,quantity,diff:quantity===null?null:quantity-x.amount*3};
 });}
@@ -133,7 +150,7 @@ function validateState(input){
  if(!['current','50','60','70','80'].includes(input.mode))fail('表示レベルが不正です');
  if(![0,20,50,70,100].includes(input.energy))fail('計算条件が不正です');
  if(!lookup(D.recipes,input.recipeId))fail('料理が不正です');
- if(input.evolution!==undefined&&!['current','final'].includes(input.evolution))fail('進化条件が不正です');
+ if(input.evolution!==undefined&&!['current','final','auto'].includes(input.evolution))fail('進化条件が不正です');
  if(input.camp!==undefined&&typeof input.camp!=='boolean')fail('キャンプ条件が不正です');
  const forms=input.finalForms??{};if(!forms||typeof forms!=='object'||Array.isArray(forms))fail('進化先条件が不正です');
  for(const [id,target] of Object.entries(forms)){const p=state.pokemon.find(p=>p.id===id);if(!p||!finalSpecies(p.species).includes(target))continue;state.finalForms[id]=target;}
