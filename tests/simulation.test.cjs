@@ -22,3 +22,18 @@ for(const map of D.maps){assert.equal(map.dynamic,map.berries.length===0);for(co
 assert.equal(ctx.BerryView.render(C.emptyState(),{items:D.maps.find(m=>m.id==='cyan').berries.map(C.berry)}).match(/<article/g).length,3);
 const branch={...berry,species:'EEVEE'};assert.equal(C.calcBerry(branch,'60',100,{evolution:'auto'}).ok,false);
 console.log('PASS auto form comparison by target, ribbon reversal, all stages/camp/levels, ranking/cooking/maps/display consistency, missing data/branches, immutable records and backup compatibility');
+
+// Independent Chansey/Blissey 2000-hour trace: source base stats and ribbon
+// coefficient must reach the final interval, counts and berry energy.
+const ribbonChansey={...chansey,ribbon:4};
+for(const [evolution,id,frequency,rate,ribbon,baseInterval] of [['current','CHANSEY',3300,.236,.88,2202],['final','BLISSEY',3100,.238,1,2351]]){
+ const sp=C.species(id),r=C.calc(ribbonChansey,'60',100,{evolution},'Egg'),b=C.calcBerry(ribbonChansey,'60',100,{evolution});
+ assert.equal(sp.frequency,frequency);near(sp.ingredientRate,rate);near(D.ribbons[4].frequencyByRemainingEvolutions[sp.remainingEvolutions],ribbon);
+ assert.equal(r.baseInterval,baseInterval);near(r.interval,baseInterval*.45);near(r.helps,86400/(baseInterval*.45));near(r.rate,rate*1.54);
+ near(r.counts.Egg,r.helps*r.rate*2/3);near(b.berryEnergy,r.helps*(1-r.rate)*C.berryPower(b.berryId,60));
+}
+for(const stage of [0,4]){const p={...chansey,ribbon:stage},rows=['current','final'].map(evolution=>C.calcBerry(p,'60',100,{evolution})),best=C.calcBerry(p,'60',100,{evolution:'auto'});near(best.berryEnergy,Math.max(...rows.map(r=>r.berryEnergy)));assert.equal(best.calculationSpecies,stage===4?'CHANSEY':'BLISSEY');}
+const originalRecord=JSON.stringify(ribbonChansey);const chosen=C.calc(ribbonChansey,'60',100,{evolution:'auto'},'Egg');
+assert(B.render({state:C.autoAssign({...state,pokemon:[ribbonChansey]}),list:D.ingredients,items:[C.ingredient('Egg')]}).includes('ラッキー'));
+assert.equal(JSON.stringify(ribbonChansey),originalRecord);assert(chosen.counts.Egg>21&&chosen.counts.Egg<22);
+console.log('PASS independent 2000-hour Chansey/Blissey performance trace, both metrics, shared card/ranking result and immutable record');

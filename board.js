@@ -21,7 +21,7 @@ const evaluationSkills={individual:['HELPING_BONUS','BERRY_FINDING_S','INGREDIEN
 function skills(p,mode,purpose='ingredient'){
  const list=evaluationSkills[purpose]||evaluationSkills.ingredient,missing=p.subskills.some(id=>!id);
  const badge=id=>{const sk=C.skill(id),i=p.subskills.indexOf(id),owned=i>=0,status=owned?C.slotStatus(p,C.SKILL_LEVELS[i],mode):missing?'uncertain':'absent';const label=owned?`Lv.${C.SKILL_LEVELS[i]} ${sk.name}・${statusName[status]}`:`${sk.name}・${missing?'未確認（サブスキルに未入力あり）':'未所持'}`;
- return `<span class="mini-skill rarity-${sk.rarity} ${owned?'owned ':''}${status}" data-skill="${id}" title="${esc(label)}" aria-label="${esc(label)}">${owned&&status==='locked'?'·':''}${short[id]}${!owned&&missing?'<sup>?</sup>':''}${status==='projected'?'<sup>試</sup>':''}</span>`;};
+ return `<span class="mini-skill rarity-${sk.rarity} ${owned?'owned ':''}${status}" data-skill="${id}" title="${esc(label)}" aria-label="${esc(label)}">${owned&&status==='locked'?'·':''}${short[id]}${!owned&&missing?'<sup>?</sup>':''}</span>`;};
  const groups=purpose==='ingredient'?[list.slice(0,2),list.slice(2,5),list.slice(5)]:purpose==='berry'?[list.slice(0,2),list.slice(2)]:[list.filter(id=>C.skill(id).rarity!=='white'),list.filter(id=>C.skill(id).rarity==='white')];
  return `<div class="mini-skills fixed-skills purpose-${purpose}" aria-label="固定位置の評価サブスキル">${groups.map((ids,i)=>`<div class="skill-row skill-group-${i}" style="--skill-columns:${purpose==='individual'?3:ids.length}">${ids.map(badge).join('')}</div>`).join('')}</div>`;
 

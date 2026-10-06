@@ -93,3 +93,10 @@ assert(B.sleepRibbon({...p,ribbon:null}).includes('おやすみリボン：未�
 
 assert.equal(B.ingredientCountText(42.8),'42');assert.equal(B.ingredientCountText(18.2),'18');assert.equal(B.ingredientCountText(100.9),'100');assert.equal(B.ingredientCountText(0.9),'0');
 let pair;for(let level=1;level<69;level++){const a={...p,id:'higher',level:level+1},b={...p,id:'lower',level};const av=C.calc(a,'current',100).counts.Sausage,bv=C.calc(b,'current',100).counts.Sausage;if(av>bv&&Math.floor(av)===Math.floor(bv)){pair={a,b,av,bv};break;}}assert(pair,'fixture with same integer display and distinct raw production');const rank=C.emptyState();rank.pokemon=[pair.b,pair.a];assert.equal(C.autoAssign(rank).assignments.Sausage.pokemonId,'higher');assert.equal(B.daily(pair.a,'current',100).items.find(([id])=>id==='Sausage')[1],pair.av);console.log('PASS floor-only ingredient text, same displayed integers retain precise ranking and calculation');
+
+// Projected badges use the shared dashed state, with no visible marker.
+for(const purpose of ['ingredient','berry']){const html=B.skills({...p,level:25,subskills:['INGREDIENT_FINDER_S','INVENTORY_S','HELPING_SPEED_M','HELPING_BONUS','INVENTORY_L']},'60',purpose);assert(html.includes('owned projected'));assert(!html.includes('<sup>試</sup>'));}
+for(const [raw,text] of [[42.8,'42'],[18.2,'18'],[100.9,'100'],[0.9,'0'],[-0.2,'-1']])assert.equal(B.ingredientCountText(raw),text);
+const appSource=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8');
+for(const expression of ['x.quantity','x.diff','r.counts[ing.id]','a.counts[id]','r.counts[i.id]']){assert(appSource.includes('BoardView.ingredientCountText('+expression+')'));assert(!appSource.includes('num('+expression+')'));}
+console.log('PASS projected marker removed and ingredient integer display shared across cards, cooking and details');
