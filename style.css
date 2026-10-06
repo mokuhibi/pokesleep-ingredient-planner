@@ -186,3 +186,15 @@ body{padding-bottom:calc(82px + env(safe-area-inset-bottom,0px))}.tabs{position:
 .food-production-row .compact-yield,.food-production-row .target-yield{min-width:0;flex-shrink:0;margin:0;padding:0;border:0}.food-production-row .target-yield{text-align:right}.harvest-tile .food-production-row .target-yield b{font-size:18px;line-height:1.2}.food-card-title .sleep-ribbon{flex-shrink:0}.food-production-row .empty-food-count{margin-left:auto}
 .simulation-settings #level-select{width:64px}.simulation-settings #evolution-mode{width:104px}.simulation-settings .level-control,.simulation-settings .check-control{margin:0}.simulation-settings .check-control{font-size:12px}.simulation-settings .check-control input{width:18px;height:18px;flex:0 0 18px;margin:0}.simulation-settings .condition-button{margin:0}
 .simulation-settings .check-control{flex:0 0 auto}.simulation-settings .simulation-group{column-gap:3px}.simulation-settings select{margin:0}
+
+/* Match section origins instead of compensating with negative margins. */
+:is(#view-board,#view-berries,#view-cooking,#view-maps){padding-top:8px}
+:is(#view-cooking,#view-maps)>.section-top{margin:0 0 12px;min-height:40px;align-items:center}
+:is(#view-cooking,#view-maps)>.section-top h2{font-size:20px;margin:0}
+.recipe-comparison-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;min-width:0}
+.recipe-ingredient-card{min-width:0;padding:9px;border:1px solid #dfe5dc;border-radius:10px;background:#fafbf6;display:flex;flex-direction:column;gap:5px;color:#243d33}
+.recipe-ingredient-card .ingredient-label{min-width:0;gap:5px;align-items:flex-start}.recipe-ingredient-card .ingredient-label>div{min-width:0}.recipe-ingredient-card .ingredient-icon{font-size:21px;width:24px;flex-shrink:0}.recipe-ingredient-card .ingredient-label h3{font-size:12px;margin:0;overflow-wrap:anywhere}.recipe-ingredient-card .text-button{font-size:12px;white-space:normal;text-align:left;padding:0;overflow-wrap:anywhere}.recipe-ingredient-card .level-text{display:block;font-size:10px}
+.recipe-quantities{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px;margin:0}.recipe-quantities div{min-width:0;background:#eef2e7;border-radius:5px;padding:4px}.recipe-quantities dt{font-size:10px;color:#677963}.recipe-quantities dd{margin:0;font-size:15px;font-weight:650;white-space:nowrap}.recipe-quantities small{font-size:10px;font-weight:400}.recipe-balance{font-size:12px;font-weight:600}.recipe-ingredient-card .quantity-note{font-size:10px;overflow-wrap:anywhere}.recipe-ingredient-card .button{margin-top:auto;min-height:40px;padding:5px;font-size:12px}
+#cooking-ingredients{margin-top:12px;min-width:0;grid-auto-rows:auto}.relation-card{background:#fafbf6}.relation-card :is(h3,button,small){overflow-wrap:anywhere}
+@media(max-width:740px){.recipe-comparison-grid,#cooking-ingredients{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}}
+.compact-board .simulation-settings{padding:10px 0}.compact-board #view-board{padding-top:8px}
