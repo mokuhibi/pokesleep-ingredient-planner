@@ -175,3 +175,5 @@ body{padding-bottom:calc(82px + env(safe-area-inset-bottom,0px))}.tabs{position:
 .relation-card h3{font-size:12px;margin:0;line-height:1.4}.relation-card small{font-size:11px;color:#75816e}.relation-card b{font-size:18px}.relation-card .text-button{text-align:left;font-size:13px;padding:0}
 #view-sources #backup-menu{margin-bottom:12px}
 @media(max-width:740px){.tabs{grid-template-columns:repeat(3,minmax(0,1fr))}.tabs .tab{min-height:42px;font-size:12px;padding:8px 4px}body{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))}.cooking-ingredient-grid{grid-auto-rows:auto}.map-favorites{grid-template-columns:1fr}.simulation-toggles{align-items:stretch;flex-wrap:wrap}.evolution-control{flex-wrap:wrap}}
+
+.map-energy-label{font-size:10px;font-weight:600;margin-right:4px;color:var(--muted,#667568)}

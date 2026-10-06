@@ -72,6 +72,13 @@ function calcBerry(p,mode,energy,options={},target=null){
  if(!Number.isFinite(count)||count<0||power===null)return {ok:false,level:r.level,errors:['きのみの計算条件が未対応です']};
  return {...r,berryId:b.id,perDrop,count,power,berryEnergy:count*power};
 }
+// Only verified favorite IDs receive the adopted base favored multiplier.
+function mapFavoriteIds(mapId,selected=[]){const map=D.maps.find(m=>m.id===mapId);return map?[...new Set((map.dynamic?selected:map.berries).filter(id=>berry(id)))]:[];}
+function calcMapBerry(p,mode,energy,options,mapId,selected=[],target){
+ if(!mapFavoriteIds(mapId,selected).includes(target))return {ok:false,level:effectiveLevel(p,mode),errors:['選択マップの好きなきのみに指定されていません']};
+ const r=calcBerry(p,mode,energy,options,target);if(!r.ok)return r;
+ return {...r,normalBerryEnergy:r.berryEnergy,berryEnergy:r.berryEnergy*D.berryModifiers.favored,favoredMultiplier:D.berryModifiers.favored,mapId};
+}
 function removePokemon(input,id){
  const next=JSON.parse(JSON.stringify(input));next.pokemon=next.pokemon.filter(p=>p.id!==id);
  for(const key of ['assignments','berryAssignments'])for(const [target,a] of Object.entries(next[key]))if(a.pokemonId===id)delete next[key][target];
@@ -158,5 +165,5 @@ function validateState(input){
  state.mode=input.mode;state.energy=input.energy;state.recipeId=input.recipeId;state.updatedAt=typeof input.updatedAt==='string'?input.updatedAt:null;
  return state;
 }
-root.SleepCore={ING_LEVELS,SKILL_LEVELS,species,ingredient,berry,nature,skill,effectiveLevel,unlocked,slotStatus,finalSpecies,simulatedSpecies,calc,berryPower,calcBerry,autoAssign,removePokemon,compare,emptyState,validateState};
+root.SleepCore={ING_LEVELS,SKILL_LEVELS,species,ingredient,berry,nature,skill,effectiveLevel,unlocked,slotStatus,finalSpecies,simulatedSpecies,calc,berryPower,calcBerry,mapFavoriteIds,calcMapBerry,autoAssign,removePokemon,compare,emptyState,validateState};
 })(globalThis);
