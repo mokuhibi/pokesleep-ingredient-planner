@@ -8,6 +8,13 @@ const statusName={active:'解放済み',projected:'試算で解放',locked:'未�
 const displaySpecies=(p,state={})=>!C.species(p.species)?(p.customName||'未入力'):state.evolution==='final'?(C.simulatedSpecies(p,state)?.name||'進化先未選択'):C.species(p.species).name;
 function identity(p,state,purpose='ingredient'){return `<div class="compact-row compact-identity"><button class="mini-person" data-detail="${esc(p.id)}" title="${esc(displaySpecies(p,state))}・現在Lv.${p.level}・計算Lv.${C.effectiveLevel(p,state.mode)}・詳細を開く"><span class="mini-person-name">${esc(displaySpecies(p,state))}</span></button><span class="card-level" title="現在Lv.${p.level}・計算Lv.${C.effectiveLevel(p,state.mode)}">Lv.${C.effectiveLevel(p,state.mode)}</span>${nature(p,true,purpose)}</div><div class="compact-row compact-secondary"><span class="card-nickname" title="${esc(p.nickname)}">${esc(p.nickname)}</span></div>`;}
 function portrait(p,state){const sp=C.simulatedSpecies(p,state);return `<span class="portrait" aria-hidden="true">${sp?`<img src="assets/pokemon/${sp.dex}.png" alt="" loading="lazy" width="64" height="64">`:'◇'}</span>`;}
+// Registered ribbon stage only; independent from assignment/evolution simulation.
+function sleepRibbon(p){
+ const stages=['なし（200時間未満）','200時間以上','500時間以上','1,000時間以上','2,000時間以上'];
+ const valid=Number.isInteger(p.ribbon)&&p.ribbon>=0&&p.ribbon<stages.length;
+ const label=valid?stages[p.ribbon]:'未入力',hours=['―','200','500','1,000','2,000'];
+ return `<span class="sleep-ribbon ${valid&&p.ribbon>0?'earned':'neutral'}" title="おやすみリボン：${label}" aria-label="おやすみリボン：${label}" data-ribbon="${valid?p.ribbon:'unknown'}">${valid&&p.ribbon>0?'<svg viewBox="0 0 12 16" width="10" height="13" aria-hidden="true"><path d="M2 1h8v13l-4-3-4 3Z" fill="currentColor"/></svg>':''}<span>${valid?hours[p.ribbon]:'?'}</span></span>`;
+}
 function nature(p,compact=false,purpose='ingredient'){const n=C.nature(p.nature);if(!n)return '<span class="mini-nature unknown" title="性格未入力">?</span>';const badges=(purpose==='berry'?[['speed','速']]:[['ingredient','食'],['speed','速']]).flatMap(([key,label])=>n.positiveModifier===key?[`<span class="up" title="${label==='食'?'食材おてつだい確率':'おてつだいスピード'}アップ">${label}↑</span>`]:n.negativeModifier===key?[`<span class="down" title="${label==='食'?'食材おてつだい確率':'おてつだいスピード'}ダウン">${label}↓</span>`]:[]);return `<span class="mini-nature">${badges.join(' ')||'<span class="neutral" title="食材確率・速度の対象補正なし">―</span>'}</span>`;}
 // Fixed purpose-specific evaluation coordinates; never remove skills from individuals.
 const evaluationSkills={individual:['HELPING_BONUS','BERRY_FINDING_S','INGREDIENT_FINDER_M','HELPING_SPEED_M','INVENTORY_M','INVENTORY_L','INGREDIENT_FINDER_S','HELPING_SPEED_S','INVENTORY_S'],ingredient:['INGREDIENT_FINDER_M','INGREDIENT_FINDER_S','HELPING_BONUS','HELPING_SPEED_M','HELPING_SPEED_S','INVENTORY_L','INVENTORY_M','INVENTORY_S'],berry:['BERRY_FINDING_S','HELPING_BONUS','HELPING_SPEED_M','HELPING_SPEED_S']};
@@ -30,7 +37,7 @@ function dailyHTML(p,state,target){const {result:r,items}=daily(p,state.mode,sta
 function time(seconds){const s=Math.round(seconds);return `${Math.floor(s/3600)}:${String(Math.floor(s%3600/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;}
 function render({state,list=D.ingredients,sort='default',items=null}){
  const owner=id=>state.pokemon.find(p=>p.id===state.assignments[id]?.pokemonId);
- return (items||orderedIngredients(sort)).map(ing=>{const p=owner(ing.id),a=state.assignments[ing.id],match=list.some(i=>i.id===ing.id);return `<article class="harvest-tile ${p?'assigned':'unassigned'} ${match?'':'search-muted'}" aria-label="${esc(ing.name)}の担当">${p?`<h3 class="food-card-title">${esc(ing.name)}</h3><div class="compact-top">${miniSlots(p,state.mode,false)}${dailyHTML(p,state,ing.id)}</div>${identity(p,state)}${skills(p,state.mode)}`:`<button class="food-card-title empty-ingredient" data-assign="${ing.id}" aria-label="${esc(ing.name)}の担当を登録">${esc(ing.name)}</button><div class="compact-top empty-food-top"><span>―</span><b>―</b></div><div class="empty-owner" aria-label="未選出・計算可能な対象個体なし"></div>`}</article>`;}).join('');
+ return (items||orderedIngredients(sort)).map(ing=>{const p=owner(ing.id),a=state.assignments[ing.id],match=list.some(i=>i.id===ing.id);return `<article class="harvest-tile ${p?'assigned':'unassigned'} ${match?'':'search-muted'}" aria-label="${esc(ing.name)}の担当">${p?`<h3 class="food-card-title"><span class="food-title-text" title="${esc(ing.name)}">${esc(ing.name)}</span>${sleepRibbon(p)}</h3><div class="compact-top">${miniSlots(p,state.mode,false)}${dailyHTML(p,state,ing.id)}</div>${identity(p,state)}${skills(p,state.mode)}`:`<button class="food-card-title empty-ingredient" data-assign="${ing.id}" aria-label="${esc(ing.name)}の担当を登録">${esc(ing.name)}</button><div class="compact-top empty-food-top"><span>―</span><b>―</b></div><div class="empty-owner" aria-label="未選出・計算可能な対象個体なし"></div>`}</article>`;}).join('');
 
 
 }
@@ -42,5 +49,5 @@ function targetList(kind,state,options={}){
  const assigned=i=>state.pokemon.some(p=>p.id===assignments[i.id]?.pokemonId);
  return items.filter(i=>!options.filter||options.filter==='all'||options.filter==='assigned'&&assigned(i)||options.filter==='empty'&&!assigned(i));
 }
-root.BoardView={short,targetList,displaySpecies,identity,evaluationSkills,orderedIngredients,render,time,nature,skills,miniSlots,slotLetters,letterSlots,daily};
+root.BoardView={sleepRibbon,short,targetList,displaySpecies,identity,evaluationSkills,orderedIngredients,render,time,nature,skills,miniSlots,slotLetters,letterSlots,daily};
 })(globalThis);

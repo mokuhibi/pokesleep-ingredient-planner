@@ -144,6 +144,7 @@ body.export-sheet{margin:0;padding:8px;max-width:none;width:${sheetWidth}px;box-
 .export-sheet .compact-secondary{min-height:14px}.export-sheet .card-nickname{font-size:11px;line-height:1.2}
 .export-sheet .fixed-skills{min-height:0;gap:2px}.export-sheet .fixed-skills .skill-row{gap:2px;min-height:23px}.export-sheet .fixed-skills .mini-skill{font-size:10px;min-height:23px;padding:1px 0;line-height:1.1;min-width:0}
 .export-sheet .berry-yield{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:28px 25px;min-height:53px;gap:0 2px}.export-sheet .berry-yield .berry-type{font-size:12px;padding:2px 3px;min-width:0;line-height:1.1}.export-sheet .berry-yield .berry-name{font-size:16px;line-height:1.2}
+.export-sheet .food-card-title .food-title-text{font-size:14px}.export-sheet .sleep-ribbon{font-size:9px;gap:1px}.export-sheet .sleep-ribbon svg{width:8px;height:11px}.export-sheet .mini-nature :is(.up,.down,.neutral){font-weight:700;padding:0 1px}
 .export-subtitle{font-size:13px;line-height:1.3;color:#35543d;margin:0 0 5px;white-space:pre-line}
 .export-footnote{font-size:10px;line-height:1.3;color:#63745b;margin:5px 0 0;white-space:pre-wrap}.export-sheet button{cursor:default}
 </style></head><body class="export-sheet"></body></html>`;
