@@ -24,11 +24,5 @@ node_modules/
 __pycache__/
 .DS_Store
 
-# Reviewed display assets only; personal images remain excluded
-!assets/pokemon/*.png
-
-# Reviewed berry display assets only
-!assets/berries/*.png
-
 # Reviewed app icons derived from user-approved artwork
 !assets/icons/*.png

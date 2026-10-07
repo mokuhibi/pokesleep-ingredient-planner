@@ -4,7 +4,7 @@ const C=SleepCore,D=SleepData;
 const make=(changes={})=>({id:'berry-test',species:'CHARIZARD',nickname:'',customName:'',memo:'',level:60,slots:['Sausage','Ginger','Herb'],nature:'BASHFUL',subskills:['INGREDIENT_FINDER_S','HELPING_SPEED_M','INGREDIENT_FINDER_M','HELPING_BONUS','INVENTORY_L'],ribbon:0,carry:null,mainSkillLevel:null,...changes});
 const near=(x,y)=>assert.ok(Math.abs(x-y)<1e-9);
 assert.equal(D.berries.length,18);assert.equal(new Set(D.berries.map(x=>x.id)).size,18);
-for(const b of D.berries){assert(b.value>0);assert(fs.existsSync(path.join(__dirname,'..',b.icon)));}
+for(const b of D.berries){assert(b.value>0);assert.equal(typeof b.icon,'string'); /* historical provenance, never rendered */}
 for(const p of D.pokemon)assert(C.berry(p.berry));
 for(const [id,level,power] of [['ORAN',1,31],['ORAN',10,40],['ORAN',30,63],['ORAN',50,104],['ORAN',60,133],['ORAN',70,170],['LEPPA',60,116],['LEPPA',70,148]])assert.equal(C.berryPower(id,level),power);
 const p=make(),before=JSON.stringify(p),r=C.calcBerry(p,'current',100,{},'LEPPA');

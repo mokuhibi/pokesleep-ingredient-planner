@@ -23,12 +23,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - run: node tests/core.test.cjs && node tests/board.test.cjs && node tests/berries.test.cjs && node tests/auto.test.cjs && node tests/simulation.test.cjs && node tests/maps.test.cjs
+      - run: node tests/core.test.cjs && node tests/board.test.cjs && node tests/berries.test.cjs && node tests/auto.test.cjs && node tests/simulation.test.cjs && node tests/maps.test.cjs && node tests/sources.test.cjs
       - name: Stage only public application files
         run: |
           mkdir -p _site/licenses
+          test -z "$(find assets/pokemon assets/berries -type f -name '*.png' -print)"
           cp index.html style.css app.js board.js core.js data.js berries.js manifest.webmanifest favicon.ico _site/
           cp -R assets _site/
+          cp DATA_SOURCES.md _site/
           cp licenses/*.txt _site/licenses/
           touch _site/.nojekyll
       - uses: actions/configure-pages@v5

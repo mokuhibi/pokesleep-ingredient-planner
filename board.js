@@ -7,7 +7,6 @@ const short={INGREDIENT_FINDER_S:'食S',INGREDIENT_FINDER_M:'食M',HELPING_SPEED
 const statusName={active:'解放済み',projected:'試算で解放',locked:'未解放'};
 const displaySpecies=(p,state={},result=null)=>result?.ok?C.species(result.calculationSpecies)?.name||'未確認':!C.species(p.species)?(p.customName||'未入力'):state.evolution==='final'?(C.simulatedSpecies(p,state)?.name||'進化先未選択'):C.species(p.species).name;
 function identity(p,state,purpose='ingredient',result=null){return `<div class="compact-row compact-identity"><button class="mini-person" data-detail="${esc(p.id)}" title="${esc(displaySpecies(p,state,result))}・現在Lv.${p.level}・計算Lv.${C.effectiveLevel(p,state.mode)}・詳細を開く"><span class="mini-person-name">${esc(displaySpecies(p,state,result))}</span></button><span class="card-level" title="現在Lv.${p.level}・計算Lv.${C.effectiveLevel(p,state.mode)}">Lv.${C.effectiveLevel(p,state.mode)}</span>${nature(p,true,purpose)}</div><div class="compact-row compact-secondary"><span class="card-nickname" title="${esc(p.nickname)}">${esc(p.nickname)}</span></div>`;}
-function portrait(p,state){const sp=C.simulatedSpecies(p,state);return `<span class="portrait" aria-hidden="true">${sp?`<img src="assets/pokemon/${sp.dex}.png" alt="" loading="lazy" width="64" height="64">`:'◇'}</span>`;}
 // Registered ribbon stage only; independent from assignment/evolution simulation.
 function sleepRibbon(p){
  const stages=D.ribbons.map(r=>r.name);

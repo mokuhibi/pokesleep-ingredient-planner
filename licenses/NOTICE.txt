@@ -1,2 +1,14 @@
 Neroli's Lab
 Copyright The Neroli's Lab Authors
+
+Application source cleanup (2026-10-07): Neroli's Lab attribution applies to
+Neroli-derived data and calculation code only. RaenonX-derived additions and
+localized labels have separate provenance; see DATA_SOURCES.md.
+Changes include selected-field extraction, localization, fixed-energy analytic
+expectations, camp/evolution simulations, berry/map/ribbon records and strict
+missing-data handling. Numerical data and calculations were not changed by this cleanup.
+
+PokéAPI base Japanese species names: Copyright (c) 2013–2023 Paul Hallett
+and PokéAPI contributors. See PokeAPI-BSD-3-Clause.txt and DATA_SOURCES.md.
+Pokémon and Pokémon character names are trademarks of Nintendo.
+Game PNG images are no longer distributed in the current application.

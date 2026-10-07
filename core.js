@@ -1,6 +1,8 @@
 /* Normal-help model adapted from Neroli's Lab, Copyright The Neroli's Lab Authors.
  * Apache-2.0; see licenses/Apache-2.0.txt and licenses/NOTICE.txt.
- * Modified: fixed-energy analytic expectations, no skills/team effects; optional camp and final-form simulation, strict missing-data handling. */
+ * Modified: fixed-energy analytic expectations, no skills/team effects; optional camp and final-form simulation, strict missing-data handling.
+ * Modified further: target-specific current/final form comparison, berry expectations
+ * and map favored multiplier. Adopted source and license boundaries: DATA_SOURCES.md. */
 (function(root){
 'use strict';
 const D=root.SleepData, ING_LEVELS=[1,30,60], SKILL_LEVELS=[10,25,50,70,80];
