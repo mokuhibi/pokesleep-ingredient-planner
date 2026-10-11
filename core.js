@@ -78,7 +78,7 @@ function calcBerry(p,mode,energy,options={},target=null){
 function mapFavoriteIds(mapId,selected=[]){const map=D.maps.find(m=>m.id===mapId);return map?[...new Set((map.dynamic?selected:map.berries).filter(id=>berry(id)))]:[];}
 function calcMapBerry(p,mode,energy,options,mapId,selected=[],target){
  if(!mapFavoriteIds(mapId,selected).includes(target))return {ok:false,level:effectiveLevel(p,mode),errors:['選択マップの好きなきのみに指定されていません']};
- const r=calcBerry(p,mode,energy,options,target);if(!r.ok)return r;
+ const r=assignmentResult('berry',p,target,{...options,mode,energy});if(!r.ok)return r;
  return {...r,normalBerryEnergy:r.berryEnergy,berryEnergy:r.berryEnergy*D.berryModifiers.favored,favoredMultiplier:D.berryModifiers.favored,mapId};
 }
 function removePokemon(input,id){
@@ -86,9 +86,31 @@ function removePokemon(input,id){
  for(const key of ['assignments','berryAssignments'])for(const [target,a] of Object.entries(next[key]))if(a.pokemonId===id)delete next[key][target];
  for(const records of Object.values(next.assignmentHistory||{}))delete records[id];
  for(const [target,list] of Object.entries(next.berryAssignmentHistory||{}))next.berryAssignmentHistory[target]=list.filter(pid=>pid!==id);
+ for(const entries of Object.values(next.manualAssignments||{}))for(const [target,pid] of Object.entries(entries))if(pid===id)delete entries[target];
  delete next.finalForms[id];return next;
 }
 // Ranking uses exactly the card calculations, with no new production coefficients.
+// Type selection is a candidate constraint, never a production multiplier.
+function assignmentResult(kind,p,target,state){
+ const producer=kind==='berry'?calcBerry:calc;
+ const types=state.typeFilters||[];
+ const evaluate=options=>producer(p,state.mode,state.energy,options,target);
+ if(!types.length)return evaluate(state);
+ const variants=state.evolution==='auto'?['current','final']: [state.evolution];
+ if(variants.some(evolution=>!simulatedSpecies(p,{...state,evolution})))return evaluate(state);
+ const allowed=variants.filter(evolution=>types.includes(berry(simulatedSpecies(p,{...state,evolution})?.berry)?.type));
+ if(!allowed.length)return {ok:false,level:effectiveLevel(p,state.mode),excluded:true,errors:['タイプ条件では対象外']};
+ const targetForms=kind==='berry'?allowed.filter(evolution=>simulatedSpecies(p,{...state,evolution})?.berry===target):allowed;
+ if(!targetForms.length)return {ok:false,level:effectiveLevel(p,state.mode),excluded:true,errors:['タイプ条件では対象のきのみを集めません']};
+ const rows=targetForms.map(evolution=>evaluate({...state,evolution}));
+ if(rows.some(r=>!r.ok))return {ok:false,level:effectiveLevel(p,state.mode),errors:[...new Set(rows.filter(r=>!r.ok).flatMap(r=>r.errors))]};
+ const eligible=rows;
+ const r=bestForm(eligible,r=>kind==='berry'?r.berryEnergy:r.counts[target]);
+ return {...r,automatic:state.evolution==='auto'};
+}
+function assignmentCandidates(kind,target,state){
+ return state.pokemon.map(p=>({p,r:assignmentResult(kind,p,target,state)})).filter(({r})=>r.ok&&(kind==='berry'?r.berryEnergy:r.counts[target])>0).sort((a,b)=>(kind==='berry'?b.r.berryEnergy-a.r.berryEnergy:b.r.counts[target]-a.r.counts[target])||a.p.id.localeCompare(b.p.id));
+}
 function autoAssign(input){
  const state=JSON.parse(JSON.stringify(input)),history=state.assignmentHistory||{},berryHistory=state.berryAssignmentHistory||{};
  for(const [id,a] of Object.entries(state.assignments))history[id]={...(history[id]||{}),[a.pokemonId]:{...a}};
@@ -96,20 +118,24 @@ function autoAssign(input){
  const best=(rows,value,previous)=>rows.filter(x=>Number.isFinite(value(x))&&value(x)>0).sort((a,b)=>value(b)-value(a)||(a.p.id===previous?-1:b.p.id===previous?1:a.p.id<b.p.id?-1:a.p.id>b.p.id?1:0))[0];
  const assignments={},berryAssignments={};
  for(const ing of D.ingredients){
- const rows=state.pokemon.map(p=>({p,r:calc(p,state.mode,state.energy,state,ing.id)})).filter(x=>x.r.ok&&species(x.r.calculationSpecies)?.specialty==='ingredient');
+ const rows=state.pokemon.map(p=>({p,r:assignmentResult('ingredient',p,ing.id,state)})).filter(x=>x.r.ok&&species(x.r.calculationSpecies)?.specialty==='ingredient');
  const winner=best(rows,x=>x.r.counts[ing.id],state.assignments[ing.id]?.pokemonId);
  if(winner){const id=winner.p.id,records=history[ing.id]||{},record=Object.prototype.hasOwnProperty.call(records,id)?records[id]:null;assignments[ing.id]=record?{...record}:{pokemonId:id,complete:false,note:'',completedAt:null};}}
  for(const b of D.berries){
- const rows=state.pokemon.map(p=>({p,r:calcBerry(p,state.mode,state.energy,state,b.id)})).filter(x=>x.r.ok&&species(x.r.calculationSpecies)?.specialty==='berry');
+ const rows=state.pokemon.map(p=>({p,r:assignmentResult('berry',p,b.id,state)})).filter(x=>x.r.ok&&species(x.r.calculationSpecies)?.specialty==='berry');
  const winner=best(rows,x=>x.r.berryEnergy,state.berryAssignments[b.id]?.pokemonId);if(winner)berryAssignments[b.id]={pokemonId:winner.p.id};}
- return {...state,assignments,berryAssignments,assignmentHistory:history,berryAssignmentHistory:berryHistory};
+ const manualAssignments=state.manualAssignments||{ingredient:{},berry:{}};
+ for(const [target,pid] of Object.entries(manualAssignments.ingredient))if(state.pokemon.some(p=>p.id===pid)){
+ const previous=history[target]?.[pid];assignments[target]=previous?{...previous}:{pokemonId:pid,complete:false,note:'',completedAt:null};}
+ for(const [target,pid] of Object.entries(manualAssignments.berry))if(state.pokemon.some(p=>p.id===pid))berryAssignments[target]={pokemonId:pid};
+ return {...state,assignments,berryAssignments,manualAssignments,assignmentHistory:history,berryAssignmentHistory:berryHistory};
 }
 function compare(state,recipe){return recipe.ingredients.map(x=>{
- const a=state.assignments[x.id],p=a&&state.pokemon.find(p=>p.id===a.pokemonId),result=p?calc(p,state.mode,state.energy,state,x.id):null;
+ const a=state.assignments[x.id],p=a&&state.pokemon.find(p=>p.id===a.pokemonId),result=p?assignmentResult('ingredient',p,x.id,state):null;
  const quantity=result?.ok?result.counts[x.id]:null;
  return {...x,need:x.amount*3,pokemon:p,result,quantity,diff:quantity===null?null:quantity-x.amount*3};
 });}
-function emptyState(){return {schemaVersion:1,pokemon:[],assignments:{},berryAssignments:{},assignmentHistory:{},berryAssignmentHistory:{},mode:'current',energy:100,evolution:'current',camp:false,finalForms:{},recipeId:D.recipes[0].id,updatedAt:null};}
+function emptyState(){return {schemaVersion:1,manualAssignments:{ingredient:{},berry:{}},typeFilters:[],mapDisplay:'berry',pokemon:[],assignments:{},berryAssignments:{},assignmentHistory:{},berryAssignmentHistory:{},mode:'current',energy:100,evolution:'current',camp:false,finalForms:{},recipeId:D.recipes[0].id,updatedAt:null};}
 function validateState(input){
  const fail=m=>{throw new Error(m);};
  if(!input||typeof input!=='object'||input.schemaVersion!==1)fail('対応していないバックアップ形式です');
@@ -156,6 +182,14 @@ function validateState(input){
  const berryHistory=input.berryAssignmentHistory??{};
  if(!berryHistory||typeof berryHistory!=='object'||Array.isArray(berryHistory))fail('きのみ担当履歴が不正です');
  for(const [id,list] of Object.entries(berryHistory)){if(!berry(id)||!Array.isArray(list)||!list.every(pid=>ids.has(pid)))fail('きのみ担当履歴の参照が不正です');state.berryAssignmentHistory[id]=[...new Set(list)];}
+ const manual=input.manualAssignments??{ingredient:{},berry:{}};
+ if(!manual||typeof manual!=='object'||Array.isArray(manual))fail('手動担当が不正です');
+ for(const kind of ['ingredient','berry']){
+ const entries=manual[kind]??{};if(!entries||typeof entries!=='object'||Array.isArray(entries))fail('手動担当が不正です');
+ for(const [target,pid] of Object.entries(entries)){if(!(kind==='berry'?berry(target):ingredient(target))||!ids.has(pid))fail('手動担当の参照が不正です');state.manualAssignments[kind][target]=pid;}}
+ const types=input.typeFilters??[];
+ if(!Array.isArray(types)||!types.every(t=>D.berries.some(b=>b.type===t)))fail('タイプ指定が不正です');state.typeFilters=[...new Set(types)];
+ if(input.mapDisplay!==undefined&&!['berry','ingredient','both'].includes(input.mapDisplay))fail('マップ表示が不正です');state.mapDisplay=input.mapDisplay??'berry';
  if(!['current','50','60','70','80'].includes(input.mode))fail('表示レベルが不正です');
  if(![0,20,50,70,100].includes(input.energy))fail('計算条件が不正です');
  if(!lookup(D.recipes,input.recipeId))fail('料理が不正です');
@@ -167,5 +201,5 @@ function validateState(input){
  state.mode=input.mode;state.energy=input.energy;state.recipeId=input.recipeId;state.updatedAt=typeof input.updatedAt==='string'?input.updatedAt:null;
  return state;
 }
-root.SleepCore={ING_LEVELS,SKILL_LEVELS,species,ingredient,berry,nature,skill,effectiveLevel,unlocked,slotStatus,finalSpecies,simulatedSpecies,calc,berryPower,calcBerry,mapFavoriteIds,calcMapBerry,autoAssign,removePokemon,compare,emptyState,validateState};
+root.SleepCore={ING_LEVELS,SKILL_LEVELS,species,ingredient,berry,nature,skill,effectiveLevel,unlocked,slotStatus,finalSpecies,simulatedSpecies,calc,berryPower,calcBerry,mapFavoriteIds,calcMapBerry,assignmentResult,assignmentCandidates,autoAssign,removePokemon,compare,emptyState,validateState};
 })(globalThis);

@@ -198,3 +198,11 @@ body{padding-bottom:calc(82px + env(safe-area-inset-bottom,0px))}.tabs{position:
 #cooking-ingredients{margin-top:12px;min-width:0;grid-auto-rows:auto}.relation-card{background:#fafbf6}.relation-card :is(h3,button,small){overflow-wrap:anywhere}
 @media(max-width:740px){.recipe-comparison-grid,#cooking-ingredients{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}}
 .compact-board .simulation-settings{padding:10px 0}.compact-board #view-board{padding-top:8px}
+
+/* Candidate constraints: shared compact controls; card geometry is unchanged. */
+.type-filter{margin:8px 0 12px;border:1px solid var(--line,#dce3d9);border-radius:10px;padding:8px 10px;font-size:13px}
+.type-filter summary{cursor:pointer;min-height:28px;line-height:28px;overflow-wrap:anywhere}
+.type-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:4px;margin-top:6px}
+.type-options label{display:flex;align-items:center;gap:6px;min-height:40px;font-size:14px;cursor:pointer}
+.type-options input{width:18px;height:18px;margin:0;accent-color:#315542}
+#map-ingredients:not([hidden]){margin-top:12px}
