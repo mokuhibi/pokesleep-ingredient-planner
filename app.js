@@ -160,7 +160,7 @@ async function compactOverviewCanvas(snapshot,sort,kind='ingredient'){
  const frame=document.createElement('iframe');frame.title='一覧画像の生成';frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;frame.style.cssText=`position:fixed;left:-14000px;top:0;width:${sheetWidth}px;height:900px;border:0;pointer-events:none`;
  const ready=new Promise((resolve,reject)=>{frame.onload=resolve;frame.onerror=()=>reject(new Error('画像用スタイルを読み込めませんでした'));});
  const sheetURL=new URL(document.querySelector('link[rel="stylesheet"]').href,location.href).href;
- frame.srcdoc=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><link rel="stylesheet" href="${sheetURL}"><link rel="stylesheet" href="${new URL('note.css?v=20261017',location.href).href}"><link rel="stylesheet" href="${new URL('share.css?v=20261017-compact20',location.href).href}"></head><body class="share-sheet"></body></html>`;
+ frame.srcdoc=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><link rel="stylesheet" href="${sheetURL}"><link rel="stylesheet" href="${new URL('note.css?v=20261017-nature-triangles',location.href).href}"><link rel="stylesheet" href="${new URL('share.css?v=20261017-compact20',location.href).href}"></head><body class="share-sheet"></body></html>`;
  document.body.append(frame);
  try{
  await ready;const doc=frame.contentDocument,body=doc.body;

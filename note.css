@@ -105,3 +105,8 @@ dialog,dialog .dialog-head,dialog .dialog-footer{background:#fff;border-color:va
 main{width:100%;margin-left:auto;margin-right:auto}
 .harvest-tile .assignment-identity .mini-nature{width:43px}
 @media(max-width:350px){.harvest-tile .assignment-identity{grid-template-columns:minmax(0,1fr) 39px}.harvest-tile .assignment-identity .mini-nature{width:39px}.harvest-tile .level-ribbon{gap:3px}.harvest-tile .level-ribbon .card-level{font-size:10px}}
+
+/* Only direction symbols carry color; nature values and purpose rules are unchanged. */
+.mini-nature .up,.mini-nature .down,.harvest-tile .mini-nature .up,.harvest-tile .mini-nature .down{color:var(--ink)}
+.mini-nature .up>.nature-symbol{color:#b34a45}
+.mini-nature .down>.nature-symbol{color:#346da6}

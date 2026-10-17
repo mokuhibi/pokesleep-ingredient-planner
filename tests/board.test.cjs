@@ -6,7 +6,7 @@ s.pokemon=[p];s.assignments.Sausage={pokemonId:p.id,complete:true,note:'',comple
 const options={state:s,list:D.ingredients,slotsHTML:()=>'',skillsHTML:()=>'',levelLabel:()=>''};
 const before=JSON.stringify(s),compact=B.render({...options,layout:'compact'}),rich=B.render({...options,layout:'rich'});
 assert.equal((compact.match(/<article/g)||[]).length,19);assert.equal((rich.match(/<article/g)||[]).length,19);assert.equal(JSON.stringify(s),before);assert(!compact.includes('<script>'));assert(B.identity(p,s).includes('&lt;script&gt;'));assert(!compact.includes('compact-secondary'));
-assert(B.nature(p).includes('食↑'));p.nature='BRAVE';assert(B.nature(p).includes('速↑'));
+assert(B.nature(p).includes('食<span class="nature-symbol">▲'));p.nature='BRAVE';assert(B.nature(p).includes('速<span class="nature-symbol">▲'));
 assert(B.skills(p,'current').includes('·おてボ'));assert(!B.skills(p,'70').includes('↗'));assert(B.skills(p,'70').includes('おてボ'));assert(!B.skills(p,'80').includes('↗'));assert(!B.skills(p,'80').includes('所持L'));assert(B.skills(p,'80','individual').includes('所持L'));
 assert.equal(B.time(3661),'1:01:01');console.log('PASS 19 tiles, unique individuals, no data mutation, escaped labels, nature directions, unlock states, time formatting');
 const current=B.render({...options,layout:'compact'});assert(!current.includes('<img'));assert(!current.includes('portrait'));assert(current.includes('Lv.60'));assert(current.includes('1日'));assert(current.includes(B.ingredientCountText(C.calc(p,'current',100).counts.Sausage)));const duplicate={...p,nature:'BASHFUL',slots:['Sausage','Sausage','Sausage']};const yieldData=B.daily(duplicate,'current',100);assert.equal(yieldData.items.length,1);assert.equal(yieldData.items[0][1],C.calc(duplicate,'current',100).counts.Sausage);assert.equal(B.daily(p,'80',100).items.length,0);assert(!B.nature({...p,nature:'BASHFUL'},true).includes('食速±'));console.log('PASS text-only compact view, level, daily counts, duplicate ingredient totals, future unknown, nature abbreviations');
@@ -82,7 +82,7 @@ console.log('PASS specified default order, energy round trip, both directions/fi
 
 assert(compact.includes('食材並び ABC'));assert(compact.includes('letter-slots'));
 assert(B.miniSlots({...p,slots:['Sausage','Sausage','Herb']},'current',false).includes('🥩'));assert(!B.miniSlots(p,'70',false).includes('<sup>'));
-assert(B.nature({...p,nature:'QUIET'},true,'berry').includes('―'));assert(!B.nature({...p,nature:'QUIET'},true,'berry').includes('食↑'));assert(B.nature({...p,nature:'BRAVE'},true,'berry').includes('速↑'));
+assert(B.nature({...p,nature:'QUIET'},true,'berry').includes('―'));assert(!B.nature({...p,nature:'QUIET'},true,'berry').includes('食<span class="nature-symbol">▲'));assert(B.nature({...p,nature:'BRAVE'},true,'berry').includes('速<span class="nature-symbol">▲'));
 console.log('PASS actual slot icons without letters/markers, target-only yield, berry-only speed nature and neutral frame');
 
 const foongus={...p,species:'FOONGUS',nickname:'そのまま',slots:['Mushroom','Egg','Tomato']},unchangedFoongus=JSON.stringify(foongus);
@@ -112,3 +112,6 @@ console.log('PASS note cards: actual target composition, Lv ribbon, no nickname 
 // The share alias follows the size-specific master ID and preserves its formal label.
 for(const [id,size] of [['GOURGEIST_SMALL','こだま'],['GOURGEIST_MEDIUM','ちゅうだま'],['GOURGEIST_LARGE','おおだま'],['GOURGEIST_JUMBO','ギガだま']]){const formal=C.species(id).name,html=B.shareNameHTML(formal);assert(html.includes('>'+size+'</span>'));assert(html.includes('aria-label="'+formal+'"'));assert.equal(C.species(id).name,formal);}
 assert.equal(B.shareNameHTML('リザードン'),'リザードン');assert.equal(B.shareNameHTML('<script>'),'&lt;script&gt;');assert(!B.identity({...p,species:'GOURGEIST_SMALL'},s).includes('こだま'));console.log('PASS share-only size aliases, formal master names unchanged, escaping and ordinary names preserved');
+
+for(const nature of D.natures)for(const purpose of ['ingredient','berry']){const html=B.nature({...p,nature:nature.id},true,purpose),text=html.replace(/<[^>]*>/g,'');assert(!/[↑↓]/.test(text));for(const [key,label] of purpose==='berry'?[['speed','速']]:[['ingredient','食'],['speed','速']]){if(nature.positiveModifier===key)assert(text.includes(label+'▲'));if(nature.negativeModifier===key)assert(text.includes(label+'▼'));}if(purpose==='berry')assert(!text.includes('食'));}
+console.log('PASS all nature labels: red/up and blue/down symbol hooks, no arrows, berry filtering and neutral state preserved');
