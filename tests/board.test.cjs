@@ -108,3 +108,7 @@ for(const ribbon of [null,0])assert(!B.identity({...p,ribbon},s,'ingredient',nul
 const ribbonCard=B.identity({...p,ribbon:4},s,'ingredient',null,true);assert(ribbonCard.includes('🎗2,000'));assert(ribbonCard.indexOf('card-level')<ribbonCard.indexOf('sleep-ribbon'));assert(!ribbonCard.includes('compact-secondary'));
 assert(!compact.includes('empty-owner'));assert.equal((compact.match(/ingredient-watermark/g)||[]).length,19);assert(!B.skills(p,'60').includes('INVENTORY_'));assert(B.skills(p,'60').includes('スピM'));
 console.log('PASS note cards: actual target composition, Lv ribbon, no nickname supplements, inventory retained in individual skills, all empty headings retained');
+
+// The share alias follows the size-specific master ID and preserves its formal label.
+for(const [id,size] of [['GOURGEIST_SMALL','こだま'],['GOURGEIST_MEDIUM','ちゅうだま'],['GOURGEIST_LARGE','おおだま'],['GOURGEIST_JUMBO','ギガだま']]){const formal=C.species(id).name,html=B.shareNameHTML(formal);assert(html.includes('>'+size+'</span>'));assert(html.includes('aria-label="'+formal+'"'));assert.equal(C.species(id).name,formal);}
+assert.equal(B.shareNameHTML('リザードン'),'リザードン');assert.equal(B.shareNameHTML('<script>'),'&lt;script&gt;');assert(!B.identity({...p,species:'GOURGEIST_SMALL'},s).includes('こだま'));console.log('PASS share-only size aliases, formal master names unchanged, escaping and ordinary names preserved');

@@ -156,16 +156,18 @@ $('delete-pokemon').onclick=()=>{const id=$('pokemon-id').value;if(!confirm('こ
 $('board-register').onclick=$('berries-register').onclick=$('add-member').onclick=()=>openEditor();
 async function compactOverviewCanvas(snapshot,sort,kind='ingredient'){
  // Share-only four-column layout. CSS pixels and PNG resolution are independent.
- const sheetWidth=720,renderScale=3;
+ const sheetWidth=576,renderScale=3;
  const frame=document.createElement('iframe');frame.title='一覧画像の生成';frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;frame.style.cssText=`position:fixed;left:-14000px;top:0;width:${sheetWidth}px;height:900px;border:0;pointer-events:none`;
  const ready=new Promise((resolve,reject)=>{frame.onload=resolve;frame.onerror=()=>reject(new Error('画像用スタイルを読み込めませんでした'));});
  const sheetURL=new URL(document.querySelector('link[rel="stylesheet"]').href,location.href).href;
- frame.srcdoc=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><link rel="stylesheet" href="${sheetURL}"><link rel="stylesheet" href="${new URL('note.css?v=20261017',location.href).href}"><link rel="stylesheet" href="${new URL('share.css?v=20261017',location.href).href}"></head><body class="share-sheet"></body></html>`;
+ frame.srcdoc=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><link rel="stylesheet" href="${sheetURL}"><link rel="stylesheet" href="${new URL('note.css?v=20261017',location.href).href}"><link rel="stylesheet" href="${new URL('share.css?v=20261017-compact20',location.href).href}"></head><body class="share-sheet"></body></html>`;
  document.body.append(frame);
  try{
  await ready;const doc=frame.contentDocument,body=doc.body;
  const subtitle=doc.createElement('p');subtitle.className='export-subtitle';subtitle.textContent=`ねむりの厳選手帳 ｜ ${kind==='berry'?'きのみ担当':'食材担当'} · ${BoardView.targetList(kind,snapshot,sort).length}件 · ${{all:'すべて',assigned:'担当あり',empty:'担当なし'}[sort.filter]}\nLv：${snapshot.mode==='current'?'現在':snapshot.mode} ｜ キャンチケ ${snapshot.camp?'ON':'OFF'} ｜ 進化 ${snapshot.evolution==='auto'?'リボン込':snapshot.evolution==='final'?'最終進化':'現在'}\nタイプ：${snapshot.typeFilters.length?snapshot.typeFilters.map(t=>BerryView.typeNames[t]).join('・'):'すべて'}`;body.append(subtitle);
  const grid=doc.createElement('div');grid.className='harvest-grid';grid.innerHTML=kind==='berry'?BerryView.render(snapshot,sort):BoardView.render({state:snapshot,items:BoardView.targetList('ingredient',snapshot,sort)});body.append(grid);
+ // Presentation only: retain the registered ID and the calculation's selected form.
+ for(const name of grid.querySelectorAll('.mini-person-name'))name.innerHTML=BoardView.shareNameHTML(name.textContent);
  const note=doc.createElement('p');note.className='export-footnote';note.textContent=`並び：${sort.by==='energy'?'エナジー':'デフォルト'}・${sort.direction==='desc'?'降順':'昇順'}。カード内Lv＝現在より下げない計算Lv。Lv.80は将来・日量未計算。
 実線＝現在解放 / 色付き点線＝想定で解放 / 薄色＝未解放 / 薄灰＝未所持 / ―＝未設定
 通常おてつだい24時間・げんき${snapshot.energy}固定・満杯前回収・本人補正とリボン。スキル/他個体/イベント等なし。各担当の個別試算で、実チームの3食を保証しません。

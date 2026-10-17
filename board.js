@@ -40,6 +40,11 @@ function render({state,list=D.ingredients,sort='default',items=null}){
  const owner=id=>state.pokemon.find(p=>p.id===state.assignments[id]?.pokemonId);
  return (items||orderedIngredients(sort)).map(ing=>{const p=owner(ing.id),match=list.some(i=>i.id===ing.id),result=p?C.assignmentResult('ingredient',p,ing.id,state):null;return `<article class="harvest-tile composition-design heading-left ${p?'assigned':'unassigned'} ${match?'':'search-muted'}" aria-label="${esc(ing.name)}の担当"><span class="ingredient-watermark" aria-hidden="true">${esc(ing.icon)}</span><h3 class="food-card-title food-divider">${p?`<span class="food-title-text" title="${esc(ing.name)}">${esc(ing.name)}</span>`:`<button class="food-title-text empty-ingredient" data-assign="${ing.id}" aria-label="${esc(ing.name)}の担当を登録">${esc(ing.name)}</button>`}</h3>${p?`<div class="compact-top food-production-row">${composition(p,state.mode,ing.id)}${dailyHTML(p,state,ing.id,result)}</div>${identity(p,state,'ingredient',result,true)}${skills(p,state.mode)}`:`<div class="compact-top food-production-row empty-food-top"><span>―</span><button class="target-yield" data-assign="${ing.id}" aria-label="${esc(ing.name)}の担当を選ぶ"><b class="empty-food-count">―</b></button></div>`}</article>`;}).join('');
 }
+// Share-only aliases: resolve the already simulated display name to its master ID.
+function shareNameHTML(name){
+ const sizes={GOURGEIST_SMALL:'こだま',GOURGEIST_MEDIUM:'ちゅうだま',GOURGEIST_LARGE:'おおだま',GOURGEIST_JUMBO:'ギガだま'},sp=D.pokemon.find(p=>p.name===name),size=sp&&sizes[sp.id];
+ return size?`<span class="share-size-name" title="${esc(sp.name)}" aria-label="${esc(sp.name)}">パンプジン<span class="share-pokemon-size">${size}</span></span>`:esc(name);
+}
 function targetList(kind,state,options={}){
  const master=kind==='berry'?D.berries:D.ingredients,assignments=kind==='berry'?state.berryAssignments:state.assignments;
  let items=kind==='ingredient'?orderedIngredients(options.by||'default'):[...master];
@@ -48,5 +53,5 @@ function targetList(kind,state,options={}){
  const assigned=i=>state.pokemon.some(p=>p.id===assignments[i.id]?.pokemonId&&!C.assignmentResult(kind,p,i.id,state).excluded);
  return items.filter(i=>!options.filter||options.filter==='all'||options.filter==='assigned'&&assigned(i)||options.filter==='empty'&&!assigned(i));
 }
-root.BoardView={composition,ingredientCountText,sleepRibbon,short,targetList,displaySpecies,identity,evaluationSkills,orderedIngredients,render,time,nature,skills,miniSlots,slotLetters,letterSlots,daily};
+root.BoardView={shareNameHTML,composition,ingredientCountText,sleepRibbon,short,targetList,displaySpecies,identity,evaluationSkills,orderedIngredients,render,time,nature,skills,miniSlots,slotLetters,letterSlots,daily};
 })(globalThis);
