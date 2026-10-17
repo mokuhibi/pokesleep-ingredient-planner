@@ -156,31 +156,15 @@ $('delete-pokemon').onclick=()=>{const id=$('pokemon-id').value;if(!confirm('こ
 $('board-register').onclick=$('berries-register').onclick=$('add-member').onclick=()=>openEditor();
 async function compactOverviewCanvas(snapshot,sort,kind='ingredient'){
  // Share-only four-column layout. CSS pixels and PNG resolution are independent.
- const foodExport=kind==='ingredient',sheetWidth=foodExport?680:720,renderScale=3;
+ const sheetWidth=720,renderScale=3;
  const frame=document.createElement('iframe');frame.title='一覧画像の生成';frame.setAttribute('aria-hidden','true');frame.tabIndex=-1;frame.style.cssText=`position:fixed;left:-14000px;top:0;width:${sheetWidth}px;height:900px;border:0;pointer-events:none`;
  const ready=new Promise((resolve,reject)=>{frame.onload=resolve;frame.onerror=()=>reject(new Error('画像用スタイルを読み込めませんでした'));});
  const sheetURL=new URL(document.querySelector('link[rel="stylesheet"]').href,location.href).href;
- frame.srcdoc=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><link rel="stylesheet" href="${sheetURL}"><style>
-body.export-sheet{margin:0;padding:${foodExport?6:8}px;max-width:none;width:${sheetWidth}px;box-sizing:border-box;background:#f5f7ef}
-.export-sheet .harvest-grid{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:1fr;gap:${foodExport?3:4}px}
-.export-sheet .harvest-tile,.export-sheet .harvest-tile.unassigned{height:auto;min-height:192px;min-width:0;margin:0;padding:${foodExport?3:4}px;gap:${foodExport?1:2}px;border-radius:7px}
-.export-sheet .harvest-tile .food-card-title{font-size:16px;min-height:25px;line-height:1.2}
-.export-sheet .compact-top{min-height:28px;gap:2px}.export-sheet .compact-top .compact-yield{margin:0;padding:0;gap:0;border:0}.export-sheet .compact-top .mini-slots{gap:1px;min-width:0}.export-sheet .compact-top .mini-slots>span{font-size:19px}
-.export-sheet .compact-top .compact-yield b,.export-sheet .target-yield,.export-sheet .berry-yield b{font-size:23px;line-height:1.1}
-.export-sheet .compact-identity{--nature-width:42px;grid-template-columns:minmax(0,1fr) 31px 42px;min-height:46px;gap:1px}
-.export-sheet .compact-identity .mini-person{min-width:0;min-height:0;padding:0}.export-sheet .compact-identity .mini-person-name{font-size:17px;white-space:normal;overflow:visible;line-height:1.15}
-.export-sheet .card-level{font-size:12px}.export-sheet .mini-nature{width:42px;height:29px;min-height:29px;flex-wrap:wrap;padding:0;gap:0}.export-sheet .mini-nature .up,.export-sheet .mini-nature .down,.export-sheet .mini-nature .neutral{font-size:11px;min-height:12px;line-height:1.1;padding:0 1px}
-.export-sheet .compact-secondary{min-height:14px}.export-sheet .card-nickname{font-size:11px;line-height:1.2}
-.export-sheet .fixed-skills{min-height:0;gap:2px}.export-sheet .fixed-skills .skill-row{gap:2px;min-height:23px}.export-sheet .fixed-skills .mini-skill{font-size:10px;min-height:23px;padding:1px 0;line-height:1.1;min-width:0}
-.export-sheet .berry-yield{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:28px 25px;min-height:53px;gap:0 2px}.export-sheet .berry-yield .berry-type{font-size:12px;padding:2px 3px;min-width:0;line-height:1.1}.export-sheet .berry-yield .berry-name{font-size:16px;line-height:1.2}
-.export-sheet .food-card-title .food-title-text{font-size:14px}.export-sheet .food-production-row .target-yield b{font-size:23px}.export-sheet .sleep-ribbon{font-size:9px;gap:1px}.export-sheet .sleep-ribbon svg{width:8px;height:11px}.export-sheet .mini-nature :is(.up,.down,.neutral){font-weight:700;padding:0 1px}
-.export-subtitle{font-size:13px;line-height:1.3;color:#35543d;margin:0 0 5px;white-space:pre-line}
-.export-footnote{font-size:10px;line-height:1.3;color:#63745b;margin:5px 0 0;white-space:pre-wrap}.export-sheet button{cursor:default}
-</style></head><body class="export-sheet"></body></html>`;
+ frame.srcdoc=`<!doctype html><html lang="ja"><head><meta charset="utf-8"><link rel="stylesheet" href="${sheetURL}"><link rel="stylesheet" href="${new URL('note.css?v=20261017',location.href).href}"><link rel="stylesheet" href="${new URL('share.css?v=20261017',location.href).href}"></head><body class="share-sheet"></body></html>`;
  document.body.append(frame);
  try{
  await ready;const doc=frame.contentDocument,body=doc.body;
- const subtitle=doc.createElement('p');subtitle.className='export-subtitle';subtitle.textContent=`${kind==='berry'?'きのみ担当':'食材担当'} · ${BoardView.targetList(kind,snapshot,sort).length}件 · ${{all:'すべて',assigned:'担当あり',empty:'担当なし'}[sort.filter]}\nLv：${snapshot.mode==='current'?'現在':`Lv.${snapshot.mode}`} ｜ キャンチケ ${snapshot.camp?'ON':'OFF'} ｜ 進化 ${snapshot.evolution==='auto'?'リボン込':snapshot.evolution==='final'?'最終進化':'現在'}\nタイプ：${snapshot.typeFilters.length?snapshot.typeFilters.map(t=>BerryView.typeNames[t]).join('・'):'すべて'}`;body.append(subtitle);
+ const subtitle=doc.createElement('p');subtitle.className='export-subtitle';subtitle.textContent=`ねむりの厳選手帳 ｜ ${kind==='berry'?'きのみ担当':'食材担当'} · ${BoardView.targetList(kind,snapshot,sort).length}件 · ${{all:'すべて',assigned:'担当あり',empty:'担当なし'}[sort.filter]}\nLv：${snapshot.mode==='current'?'現在':snapshot.mode} ｜ キャンチケ ${snapshot.camp?'ON':'OFF'} ｜ 進化 ${snapshot.evolution==='auto'?'リボン込':snapshot.evolution==='final'?'最終進化':'現在'}\nタイプ：${snapshot.typeFilters.length?snapshot.typeFilters.map(t=>BerryView.typeNames[t]).join('・'):'すべて'}`;body.append(subtitle);
  const grid=doc.createElement('div');grid.className='harvest-grid';grid.innerHTML=kind==='berry'?BerryView.render(snapshot,sort):BoardView.render({state:snapshot,items:BoardView.targetList('ingredient',snapshot,sort)});body.append(grid);
  const note=doc.createElement('p');note.className='export-footnote';note.textContent=`並び：${sort.by==='energy'?'エナジー':'デフォルト'}・${sort.direction==='desc'?'降順':'昇順'}。カード内Lv＝現在より下げない計算Lv。Lv.80は将来・日量未計算。
 実線＝現在解放 / 色付き点線＝想定で解放 / 薄色＝未解放 / 薄灰＝未所持 / ―＝未設定
@@ -188,7 +172,7 @@ body.export-sheet{margin:0;padding:${foodExport?6:8}px;max-width:none;width:${sh
 データ ${D.meta.version} / 計算 ${kind==='berry'?D.meta.berryCalcVersion:D.meta.calcVersion} / 自動選出 v1`;body.append(note);
  await doc.fonts.ready;
  const height=Math.ceil(body.scrollHeight);frame.style.height=height+'px';
- return await html2canvas(body,{scale:renderScale,backgroundColor:'#f5f7ef',width:sheetWidth,height,windowWidth:sheetWidth,windowHeight:height,scrollX:0,scrollY:0,logging:false});
+ return await html2canvas(body,{scale:renderScale,backgroundColor:'#ffffff',width:sheetWidth,height,windowWidth:sheetWidth,windowHeight:height,scrollX:0,scrollY:0,logging:false});
  }finally{frame.remove();}
 }
 let overviewObjectURL=null;

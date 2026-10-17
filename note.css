@@ -1,0 +1,107 @@
+/* Note-style presentation only. Calculations and storage remain in core.js. */
+.harvest-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px;row-gap:17px}.harvest-tile{min-width:0;padding:12px 0 14px;border:0;border-top:1px solid #dfe2e3;background:#fff;display:flex;flex-direction:column;gap:7px;min-height:190px}.compact-top{display:flex;align-items:center;justify-content:space-between;min-height:26px}.mini-slots{display:flex;gap:3px;font-size:21px;line-height:1.2}.mini-slots .locked{opacity:.3}.mini-slots .projected{opacity:.7}.compact-yield{display:flex;align-items:center;gap:3px}.target-yield{background:transparent;padding:0;min-height:30px;white-space:nowrap}.target-yield b,.empty-food-count{font-size:27px;letter-spacing:-.05em;line-height:1;font-variant-numeric:tabular-nums}.compact-yield small{font-size:10px}.food-card-title{margin:0;display:flex;align-items:center;justify-content:space-between;gap:3px;min-height:21px;font-weight:500}.food-title-text{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}.empty-ingredient{padding:0;background:none;min-height:21px;text-align:left}.sleep-ribbon{display:flex;align-items:center;gap:2px;font-size:10px;color:#697d6b;white-space:nowrap}.sleep-ribbon.neutral{color:#a5aaad}.compact-identity{display:grid;grid-template-columns:minmax(0,1fr) 33px 43px;gap:2px;align-items:center;min-height:32px}.mini-person{background:transparent;text-align:left;padding:0;min-width:0;min-height:30px;line-height:1.3;font-size:14px;font-weight:700;overflow-wrap:anywhere}.card-level{font-size:10px;color:#6f7578;font-variant-numeric:tabular-nums;white-space:nowrap}.mini-nature{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:1px;width:43px;min-height:27px;border:1px solid #d9dfdc;border-radius:4px;background:#f6f8f7;font-size:10px;font-weight:700}.mini-nature .up{color:#315e4b}.mini-nature .down{color:#8f5c57}.mini-nature .neutral{color:#9a9fa2}.compact-secondary{min-height:13px;font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.fixed-skills{display:flex;flex-direction:column;gap:4px;margin-top:0}.skill-row{display:grid;grid-template-columns:repeat(var(--skill-columns),minmax(0,1fr));gap:3px}.mini-skill{display:flex;align-items:center;justify-content:center;font-size:9px;white-space:nowrap;border:1px solid;border-radius:3px;min-height:21px;line-height:1.2;padding:2px 0}.rarity-gold{background:#fff2ca;border-color:#d5b452;color:#7f651c}.rarity-blue,.rarity-silver{background:#e9f2fb;border-color:#99badb;color:#38638a}.rarity-white{background:#f7f8f8;border-color:#c8ced1;color:#555f64}.mini-skill.projected{border-style:dashed;background:color-mix(in srgb,currentColor 4%,white);opacity:.85}.mini-skill.locked{opacity:.38}.mini-skill.absent{background:#fafafa;color:#bec2c4;border-color:#eceeef}.mini-skill.uncertain{opacity:.4}.empty-owner{min-height:110px}.empty-owner:after{content:"担当なし";display:block;font-size:12px;color:#a2a8ab;padding-top:12px}.berry-yield{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:30px 22px;gap:4px;align-items:center;background:none;border-radius:0;text-align:left;padding:0;min-width:0}.berry-type{grid-area:1/1;font-size:12px;font-weight:700;justify-self:start;border-radius:4px;color:#fff;padding:4px 6px;background:var(--type-color,#73797e);white-space:nowrap}.berry-yield b{grid-area:1/2;font-size:23px;font-variant-numeric:tabular-nums;letter-spacing:-.045em}.berry-name{grid-area:2/1;font-size:12px}.berry-yield .sleep-ribbon{grid-area:2/2;justify-self:end}.berry-tile{border-top:2px solid color-mix(in srgb,var(--type-color,#73797e) 40%,white)}.berry-empty{font-size:11px;color:#a2a8ab;padding-top:12px}.berry-error{font-size:10px;color:#8f5c57}.map-energy-label{font-size:9px;font-weight:400;margin-right:3px;color:var(--muted)}
+/* Existing app type palette, reused without changes. */
+.type-normal{--type-color:#756653}.type-fire{--type-color:#b95226}.type-water{--type-color:#2873ad}.type-electric{--type-color:#947000}.type-grass{--type-color:#477c32}.type-ice{--type-color:#2b7a87}.type-fighting{--type-color:#a44732}.type-poison{--type-color:#9155a4}.type-ground{--type-color:#8c693b}.type-flying{--type-color:#586ba0}.type-psychic{--type-color:#b94373}.type-bug{--type-color:#607b28}.type-rock{--type-color:#88752d}.type-ghost{--type-color:#725492}.type-dragon{--type-color:#6655b7}.type-dark{--type-color:#615652}.type-steel{--type-color:#597079}.type-fairy{--type-color:#ac558a}
+.dynamic-favorites{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:12px}.dynamic-favorites select{font-size:12px;min-width:0}.map-note{font-size:11px;color:var(--muted);line-height:1.6;margin:10px 0 0}
+
+/* Compact preview revision: food inventory badges are omitted by the shared adapter. */
+.harvest-tile{min-height:174px;gap:6px}
+.food-title-text{font-size:13px}
+.mini-person{font-size:15px}
+.target-yield b,.empty-food-count{font-size:29px}
+.berry-name{font-size:13px}
+.berry-yield b{font-size:25px}
+.mini-skill{font-size:10px}
+@media(max-width:350px){.mini-person{font-size:14px}.mini-skill{font-size:9px}.food-title-text,.berry-name{font-size:12px}}
+
+/* Ribbon follows Lv; names get a full-width row so long names cannot collide. */
+.harvest-tile{min-height:168px;padding-top:10px;padding-bottom:10px;gap:4px}
+.compact-identity{grid-template-columns:minmax(0,1fr) 43px;grid-template-rows:minmax(22px,auto) 25px;gap:2px;min-height:49px}
+.compact-identity .mini-person{grid-column:1/-1;grid-row:1;white-space:normal;overflow-wrap:anywhere;min-height:22px;line-height:1.3}
+.level-ribbon{grid-column:1;grid-row:2;display:flex;align-items:center;gap:5px;min-width:0;white-space:nowrap}
+.level-ribbon .card-level{font-size:11px}
+.level-ribbon .sleep-ribbon{display:inline-flex;font-size:10px;gap:0;color:#66786a;white-space:nowrap}
+.compact-identity .mini-nature{grid-column:2;grid-row:2;justify-self:end}
+.compact-secondary.no-nickname{display:none}
+@media(max-width:350px){.compact-identity{grid-template-columns:minmax(0,1fr) 39px}.level-ribbon{gap:4px}.level-ribbon .sleep-ribbon{font-size:9px}}
+
+/* Alternate food-card design; the shared adapter sets opacity by assignment state. */
+.design-options{display:flex;gap:6px;margin:0 0 16px}
+.design-options button{flex:1;min-width:0;padding:6px 8px;font-size:12px;color:#747c80}
+.design-options button[aria-pressed="true"]{color:#252729;background:#e9ebeb;font-weight:700}
+.harvest-tile.composition-design{position:relative;isolation:isolate;overflow:hidden}
+.composition-design>.ingredient-watermark{position:absolute;right:5px;top:30px;font-size:110px;line-height:1.2;opacity:.12;pointer-events:none;user-select:none;z-index:0}
+.composition-design>:not(.ingredient-watermark){position:relative;z-index:1}
+.preview-composition{display:flex;align-items:center;gap:3px;font-size:22px;font-weight:750;letter-spacing:.06em;line-height:1.2}
+.preview-composition .projected{opacity:.7}.preview-composition .locked{opacity:.35}
+
+/* Ingredient name belongs to the section rule, not the Pokemon identity. */
+.harvest-tile.heading-center,.harvest-tile.heading-left{border-top:0;padding-top:0;min-height:156px}
+.food-card-title.food-divider{display:flex;align-items:center;gap:5px;min-height:19px;margin:0 0 1px;font-size:13px;font-weight:600;line-height:1.4;color:#535b5f}
+.food-divider::before,.food-divider::after{content:"";display:block;flex:1 1 0;min-width:6px;height:1px;background:#dfe2e3}
+.food-divider .food-title-text{flex:0 1 auto;min-width:0;font-size:13px;line-height:1.4;font-weight:600;color:#535b5f}
+.heading-left .food-divider::before{display:none}
+.heading-left .food-divider .food-title-text{flex-shrink:1}
+@media(max-width:350px){.food-divider .food-title-text{font-size:12px}.food-card-title.food-divider{gap:4px}}
+
+/* Berry text-only cards follow the left-aligned food heading / metric / identity. */
+.harvest-tile.berry-text-design{border:0;background:#fff;min-height:156px;padding-top:0}
+.berry-text-design .berry-yield{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:30px;gap:2px;min-height:30px}
+.berry-text-design .berry-yield b{grid-column:2;grid-row:1;font-size:29px}
+.berry-text-design .berry-type{grid-column:1;grid-row:1;color:var(--type-color);background:#fff;border:1px solid var(--type-color);padding:3px 4px;font-size:11px;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.berry-text-design .empty-owner{min-height:110px}
+@media(max-width:350px){.berry-text-design .berry-type{font-size:10px;padding:2px}.berry-text-design .berry-yield b{font-size:24px}}
+
+/* Role highlighting uses actual registered slot IDs, independent of unlock opacity. */
+.preview-composition>span.composition-target,.preview-composition>span.composition-other{opacity:1;font-size:inherit;font-weight:inherit}
+.preview-composition>span.composition-target{color:#000000}
+.preview-composition>span.composition-other{color:#cccccc}
+
+/* Content-sized rows; badges follow identity instead of flex auto-space. */
+.harvest-grid{grid-auto-rows:auto;align-items:stretch}
+.harvest-tile,.harvest-tile.heading-center,.harvest-tile.heading-left,.harvest-tile.berry-text-design{height:auto;min-height:0;gap:3px;padding-bottom:8px}
+.harvest-tile .fixed-skills{margin-top:0;gap:3px}
+.harvest-tile .empty-owner,.berry-text-design .empty-owner{min-height:0}
+.empty-owner:after{padding-top:2px}
+.berry-text-design .berry-type{color:#fff;background:var(--type-color);border-color:var(--type-color)}
+
+/* Opacity is set from the existing assigned/unassigned card state by the adapter. */
+.opacity-options{font-size:12px;color:#697276;margin:0 0 14px}
+.opacity-options summary{cursor:pointer;min-height:32px;line-height:32px}
+.opacity-options small{font-size:10px;color:#969c9f;margin-left:6px}
+.opacity-options .design-options{margin:5px 0 0}
+
+/* Uniform watermark, with assignment conveyed by heading weight and known values. */
+.harvest-tile.assigned .food-divider .food-title-text{font-weight:700}
+.harvest-tile.unassigned .food-divider .food-title-text{font-weight:400}
+/* Equal implicit rows use the tallest content in each ingredient/berry grid.
+ * Empty assignments reserve the same space without placeholder information. */
+.harvest-grid{grid-auto-rows:1fr;align-items:stretch}
+
+/* Application shell: shared across all six screens, independent of data/state. */
+:root{color-scheme:light;--ink:#252729;--green:#353a3c;--green-dark:#202426;--muted:#818689;--line:#eaecee;--paper:#fff;--cream:#f5f6f6;--light:#f0f2f2;--shadow:none}
+body{background:#fff;color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif}
+.site-header{height:auto;min-height:94px;padding:22px 24px;max-width:1000px}.brand{font-size:20px;letter-spacing:0}.brand-mark{border-radius:9px;background:#fff}.brand small{color:#92979a}.local-indicator{color:var(--muted)}
+main{max-width:950px;padding:0 24px 28px}.view{padding-top:16px}h2,.assignment-header h2,:is(#view-cooking,#view-maps)>.section-top h2{font-size:28px;font-weight:750;letter-spacing:-.035em}.assignment-count{color:var(--muted);font-weight:400}.section-top{margin:0 0 18px;min-height:44px}
+.button,.button.primary,.button.primary:hover,.filter-chips button.selected{background:#f3f4f4;color:#252729;border:1px solid transparent;box-shadow:none}.button:hover{background:#e9ebeb;transform:none}.button.danger{color:#965955}.button{border-radius:7px;min-height:40px}.filter-chips button{border-radius:6px}.filter-chips button.selected{font-weight:700}.tabs{background:#fff;border-top:1px solid var(--line);box-shadow:none;grid-template-columns:repeat(6,minmax(0,1fr));gap:0;padding-top:0}.tabs .tab{background:none;border-radius:0;font-size:12px;min-height:58px;color:#92989b;position:relative;white-space:nowrap}.tabs .tab.active{background:none;color:#252729}.tabs .tab.active:before{content:"";position:absolute;top:0;left:calc(50% - 9px);height:2px;width:18px;background:#252729}
+.simulation-settings,.compact-board .simulation-settings{padding:12px 0;border-bottom:1px solid var(--line)}.simulation-settings select,.assignment-sort select{background:#f5f6f6;border:0;color:var(--ink)}.simulation-settings .check-control{color:#535b5f}.check-control input[type=checkbox],.type-options input{accent-color:#353a3c}.type-filter{border:0;border-radius:0;border-bottom:1px solid var(--line);padding:4px 0 8px;color:#697276}
+.recipe-picker,.source-card,.compare-card,.relation-card,.recipe-ingredient-card,.member-grid .member-card{background:#fff;border:0;border-top:1px solid var(--line);border-radius:0;box-shadow:none}.recipe-symbol,.recipe-quantities div,.daily-yield,.slot-field,.notice,.extra-details,.empty-message{background:#f5f6f6;color:#697276}.recipe-picker{padding:18px 0}.source-card{padding:20px 0}.source-card p,.source-card li{color:#697276}.recipe-ingredient-card{color:var(--ink)}.recipe-quantities dt,.level-text,.quantity-note,.member-meta,.member-owned-skills small{color:#818689}.relation-card{padding:10px 0}.source-grid{gap:20px 30px}
+dialog,dialog .dialog-head,dialog .dialog-footer{background:#fff;border-color:var(--line);box-shadow:none}dialog{border-radius:12px}dialog::backdrop{background:#0005;backdrop-filter:none}input:not([type=checkbox]),select,textarea{border-color:#e0e3e4;color:var(--ink)}.icon-button{background:transparent;color:#697276}.nature-effects{background:#f5f6f6}.assignment-fields label{background:#f5f6f6;border-color:#e0e3e4}.compare-card .daily-yield{background:#f5f6f6}.help-stats dd{color:var(--ink)}footer,footer>span:first-child{color:var(--muted)}
+/* Explicit assignment selectors supersede old fixed heights without altering records. */
+.harvest-grid{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:1fr;gap:16px 20px;align-items:stretch}
+.harvest-tile.composition-design,.harvest-tile.berry-text-design,.harvest-tile.unassigned{height:auto;min-height:0;padding:0 0 8px;gap:3px;border:0;border-radius:0;box-shadow:none;background:#fff;display:flex;flex-direction:column}
+.harvest-tile .food-card-title.food-divider{display:flex;align-items:center;gap:5px;min-height:19px;margin:0 0 1px;padding:0;color:#535b5f;line-height:1.4;font-size:13px;font-weight:600;overflow:visible}.harvest-tile .food-divider .food-title-text{font-size:13px;line-height:1.4;color:#535b5f}.harvest-tile .empty-ingredient{background:none;padding:0;min-height:19px;max-width:100%;width:auto;border:0;color:#535b5f}
+.harvest-tile .compact-top{display:flex;justify-content:space-between;align-items:center;min-height:30px;gap:3px}.harvest-tile .compact-yield{border:0;background:none;padding:0;margin:0;min-height:0;min-width:0;gap:3px}.harvest-tile .target-yield{padding:0;min-height:30px;background:none;border:0;color:#252729}.harvest-tile .target-yield b,.harvest-tile .empty-food-count{font-size:29px;line-height:1;letter-spacing:-.05em}.harvest-tile .assignment-identity{display:grid;grid-template-columns:minmax(0,1fr) 43px;grid-template-rows:minmax(22px,auto) 25px;gap:2px;min-height:49px;flex:none;align-items:center}.harvest-tile .assignment-identity .mini-person{grid-column:1/-1;grid-row:1;padding:0;margin:0;background:none;border:0;min-height:22px;color:#252729;text-align:left;white-space:normal;overflow-wrap:anywhere}.harvest-tile .mini-person-name{font-size:15px;line-height:1.3;white-space:normal;overflow:visible;color:#252729}.harvest-tile .level-ribbon .card-level{font-size:11px;color:#6f7578}.harvest-tile .mini-nature{display:flex;align-items:center;justify-content:center;gap:1px;flex-wrap:wrap;width:43px;height:auto;min-height:25px;padding:2px 1px;border:1px solid #cdd6d1;border-radius:4px;background:#f6f8f7;font-size:11px;font-weight:700}.harvest-tile .mini-nature :is(.up,.down,.neutral){font-size:10px;font-weight:700;line-height:1.2;padding:0;background:none;border:0}.harvest-tile .mini-nature .up{color:#315e4b}.harvest-tile .mini-nature .down{color:#8f5c57}.harvest-tile .mini-nature .neutral{color:#9a9fa2}
+.harvest-tile .fixed-skills{margin:0;min-height:0;gap:3px}.harvest-tile .fixed-skills .skill-row{min-height:0;gap:3px}.harvest-tile .fixed-skills .mini-skill{min-width:0;min-height:21px;padding:2px 0;font-size:10px;line-height:1.2;white-space:nowrap;border-radius:3px;box-shadow:none}.harvest-tile .mini-skill.projected{border-style:dashed;opacity:.85;box-shadow:none}.harvest-tile .mini-skill.projected.rarity-gold{background:#fffaf0}.harvest-tile .mini-skill.projected.rarity-silver{background:#f4f8fd}.harvest-tile .mini-skill.projected.rarity-white{background:#fafbfb}.harvest-tile .mini-skill.locked{opacity:.38}.harvest-tile .mini-skill.absent{background:#fafafa;color:#bec2c4;border-color:#eceeef;opacity:1}
+.harvest-tile .berry-yield{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:30px;min-height:30px;padding:0;margin:0;gap:2px;background:none;border:0;border-radius:0}.harvest-tile .berry-yield .berry-type{grid-column:1;grid-row:1;width:auto;margin:0;justify-self:start;background:var(--type-color);color:#fff;border:1px solid var(--type-color);font-size:11px;line-height:1.2;padding:3px 4px;border-radius:4px;white-space:nowrap}.harvest-tile .berry-yield b{grid-column:2;grid-row:1;justify-self:end;font-size:27px;line-height:1.1;color:#252729;letter-spacing:-.045em}.harvest-tile .ingredient-watermark{opacity:.12}
+.member-grid{grid-auto-rows:1fr}.member-grid .member-card{height:auto;min-height:0;padding:10px 0;gap:4px}.member-card .compact-identity{display:grid;grid-template-columns:minmax(0,1fr) 33px 43px;grid-template-rows:auto;min-height:32px}.member-card .compact-identity .mini-person{grid-column:1;grid-row:1}.member-card .compact-identity .mini-nature{grid-column:3;grid-row:1}.member-card .mini-person-name{font-size:14px}.member-card .compact-secondary{white-space:normal;min-height:0}.member-card .member-detail{background:#f5f6f6;border:0;color:#252729}
+@media(max-width:740px){main{padding-left:20px;padding-right:20px}.site-header{padding:20px;gap:10px;flex-wrap:wrap}.brand{font-size:18px;gap:9px}.brand-mark{width:32px;height:32px}.header-actions{margin-left:auto}.local-indicator{display:none}.header-actions .button{padding:8px;font-size:11px}.harvest-grid{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:16px;row-gap:14px}.source-grid{grid-template-columns:1fr}.assignment-header h2,:is(#view-cooking,#view-maps)>.section-top h2,h2{font-size:27px}.member-grid{grid-auto-rows:1fr}.member-grid .member-card{height:auto;min-height:0}.tabs .tab{font-size:12px}.recipe-picker{gap:10px}.recipe-fields label{min-width:0}.recipe-symbol{display:none}}
+@media(min-width:560px) and (max-width:850px){.harvest-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:350px){main{padding-left:14px;padding-right:14px}.site-header{padding:18px 14px}.harvest-grid{column-gap:10px}.harvest-tile .mini-person-name{font-size:14px}.harvest-tile .fixed-skills .mini-skill{font-size:9px}.harvest-tile .food-divider .food-title-text{font-size:12px}.harvest-tile .berry-yield b{font-size:24px}}
+/* Reserve the compact populated-card footprint even when every owner is empty. */
+.harvest-grid{grid-auto-rows:minmax(156px,1fr)}
+.skill-picker,.skill-picker-header{background:#fff;border-color:#e0e3e4}.skill-choice-group h4,.species-field>small,.eyebrow{color:#818689}.skill-slot[aria-expanded=true],.skill-choice[aria-pressed=true]{outline-color:#535b5f}.notice.error{background:#fff4f2;color:#96544b}
+/* Legacy mobile main width already subtracted margins; avoid double side gutters. */
+main{width:100%;margin-left:auto;margin-right:auto}
+.harvest-tile .assignment-identity .mini-nature{width:43px}
+@media(max-width:350px){.harvest-tile .assignment-identity{grid-template-columns:minmax(0,1fr) 39px}.harvest-tile .assignment-identity .mini-nature{width:39px}.harvest-tile .level-ribbon{gap:3px}.harvest-tile .level-ribbon .card-level{font-size:10px}}

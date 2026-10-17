@@ -1,0 +1,66 @@
+/* Image-only layout; never loaded by the application or ordinary note preview. */
+body.share-sheet{width:720px;max-width:none;margin:0;padding:12px;background:#fff;color:#252729}.share-heading{display:grid;grid-template-columns:1fr auto;gap:5px 8px;padding:0 0 12px;margin-bottom:6px;border-bottom:1px solid #e4e7e8}.share-heading h1{font-size:19px;letter-spacing:0;margin:0}.share-heading>span{font-size:12px;color:#5f686c;align-self:center}.share-heading p{grid-column:1/-1;font-size:12px;color:#697276;margin:0}.share-sheet .harvest-grid{grid-template-columns:repeat(4,minmax(0,1fr));column-gap:12px;row-gap:8px;grid-auto-rows:1fr}.share-sheet .harvest-tile{min-height:201px;padding:9px 0 10px;gap:5px;min-width:0}.share-sheet .compact-top{min-height:26px}.share-sheet .mini-slots{font-size:22px;gap:1px}.share-sheet .target-yield b{font-size:29px}.share-sheet .food-title-text{font-size:14px;font-weight:650;line-height:1.4}.share-sheet .food-card-title{min-height:22px;gap:1px}.share-sheet .sleep-ribbon{font-size:9px;gap:1px}.share-sheet .sleep-ribbon svg{width:7px;height:10px}.share-sheet .compact-identity{grid-template-columns:1fr auto;grid-template-rows:24px 25px;row-gap:2px;min-height:51px;align-items:center}.share-sheet .mini-person{grid-column:1/-1;grid-row:1;font-size:18px;white-space:nowrap;line-height:1.3;min-height:24px;letter-spacing:-.04em}.share-sheet .card-level{grid-column:1;grid-row:2;font-size:12px}.share-sheet .mini-nature{grid-column:2;grid-row:2;min-height:23px;font-size:10px;width:49px}.share-sheet .compact-secondary{font-size:10px;min-height:12px;line-height:1.2}.share-sheet .fixed-skills{gap:3px}.share-sheet .skill-row{gap:2px}.share-sheet .mini-skill{min-height:19px;padding:1px 0;font-size:9px;border-radius:2px}.share-sheet .berry-yield{grid-template-rows:28px 22px;gap:3px 1px}.share-sheet .berry-yield b{font-size:25px}.share-sheet .berry-type{font-size:11px;padding:3px 4px}.share-sheet .berry-name{font-size:15px;font-weight:650}.share-sheet .berry-empty,.share-sheet .empty-owner:after{font-size:12px;color:#9ba1a4}.share-sheet .empty-owner{min-height:110px}.share-notes{margin-top:12px;padding-top:9px;border-top:1px solid #e7e9ea;font-size:9px;color:#7b8387;line-height:1.6}.share-notes p{margin:0}
+/* Explicit export colors keep the canvas renderer compatible with CSS Color 3. */
+.share-sheet .berry-tile{border-top:1px solid #dfe2e3}
+.share-sheet .mini-skill.projected.rarity-gold{background:#fffaf0}
+.share-sheet .mini-skill.projected.rarity-silver{background:#f4f8fd}
+.share-sheet .mini-skill.projected.rarity-white{background:#fafbfb}
+.share-sheet .harvest-tile{min-height:180px;padding-top:8px;padding-bottom:8px;gap:3px}
+.share-sheet .compact-identity{grid-template-rows:23px 22px;row-gap:1px;min-height:46px}
+.share-sheet .compact-secondary{min-height:10px;font-size:9px}
+.share-sheet .fixed-skills{gap:2px}.share-sheet .mini-skill{min-height:18px}
+.share-sheet .food-title-text{font-size:13.5px}.share-sheet .sleep-ribbon{font-size:8px}
+
+/* Same five/four comparison badges as the screen; freed space favors names/yields. */
+.share-sheet .harvest-tile{min-height:166px}
+.share-sheet .food-title-text{font-size:14px}
+.share-sheet .berry-name{font-size:16px}
+.share-sheet .mini-person{font-size:19px}
+.share-sheet .target-yield b{font-size:31px}
+.share-sheet .berry-yield b{font-size:27px}
+.share-sheet .mini-skill{font-size:10px}
+
+/* Image ribbon placement shares the same DOM adapter as screen cards. */
+.share-sheet .compact-identity{grid-template-columns:minmax(0,1fr) 49px;grid-template-rows:minmax(24px,auto) 23px;min-height:48px}
+.share-sheet .compact-identity .mini-person{white-space:normal;overflow-wrap:anywhere;min-height:24px;line-height:1.25}
+.share-sheet .level-ribbon{grid-column:1;grid-row:2;gap:5px}
+.share-sheet .level-ribbon .card-level{font-size:11px}
+.share-sheet .level-ribbon .sleep-ribbon{font-size:10px}
+.share-sheet .compact-identity .mini-nature{grid-column:2;grid-row:2}
+.share-sheet .compact-secondary.no-nickname{display:none}
+
+.share-sheet .preview-composition{font-size:22px;gap:2px}
+.share-sheet .composition-design>.ingredient-watermark{font-size:115px;right:1px;top:28px;opacity:.12}
+
+.share-sheet .harvest-tile.heading-center,.share-sheet .harvest-tile.heading-left{min-height:151px;padding-top:0;gap:3px}
+.share-sheet .food-card-title.food-divider{min-height:20px;margin-bottom:0;gap:5px}
+.share-sheet .food-divider .food-title-text{font-size:13px;line-height:1.35;font-weight:600;color:#535b5f}
+
+.share-sheet .harvest-tile.berry-text-design{min-height:151px;padding-top:0;background:#fff}
+.share-sheet .berry-text-design .berry-yield{grid-template-rows:30px;min-height:30px;gap:1px}
+.share-sheet .berry-text-design .berry-yield b{font-size:31px;line-height:1.1}
+.share-sheet .berry-text-design .berry-type{font-size:11px;padding:2px 3px;background:#fff;color:var(--type-color);border-color:var(--type-color)}
+.share-sheet .harvest-tile.berry-text-design{border:0}
+.share-sheet .berry-text-design .berry-yield{column-gap:6px}
+.share-sheet .berry-text-design .berry-type{font-size:10px;padding:2px;letter-spacing:-.02em}
+
+/* Remove minimum card heights and equal-height rows; align only within each row. */
+.share-sheet .harvest-grid{grid-auto-rows:auto;align-items:stretch}
+.share-sheet .harvest-tile,.share-sheet .harvest-tile.heading-center,.share-sheet .harvest-tile.heading-left,.share-sheet .harvest-tile.berry-text-design{height:auto;min-height:0;gap:3px;padding-bottom:7px}
+.share-sheet .harvest-tile .fixed-skills{margin-top:0;gap:2px}
+.share-sheet .harvest-tile .empty-owner{min-height:0}
+.share-sheet .berry-text-design .berry-type{color:#fff;background:var(--type-color);border-color:var(--type-color)}
+/* Four columns, equal content-sized rows including the final incomplete row. */
+.share-sheet .harvest-grid{grid-auto-rows:1fr;align-items:stretch}
+
+.share-sheet .export-subtitle{font-size:12px;line-height:1.6;color:#535b5f;margin:0 0 12px;white-space:pre-line;border-bottom:1px solid #eaecee;padding-bottom:8px}.share-sheet .export-footnote{font-size:9px;line-height:1.6;color:#7b8387;margin:12px 0 0;white-space:pre-wrap;border-top:1px solid #eaecee;padding-top:8px}
+/* Export sizing overrides screen selectors without affecting the live UI. */
+.share-sheet .harvest-grid{grid-template-columns:repeat(4,minmax(0,1fr));grid-auto-rows:minmax(153px,1fr);gap:8px 12px}
+.share-sheet .harvest-tile .assignment-identity{grid-template-columns:minmax(0,1fr) 49px;grid-template-rows:minmax(24px,auto) 23px;min-height:48px;gap:1px}
+.share-sheet .harvest-tile .mini-person-name{font-size:19px;line-height:1.25;letter-spacing:-.04em}
+.share-sheet .harvest-tile .target-yield b,.share-sheet .harvest-tile .empty-food-count,.share-sheet .harvest-tile .berry-yield b{font-size:31px}
+.share-sheet .harvest-tile .fixed-skills .mini-skill{font-size:10px;min-height:18px;padding:1px 0;border-radius:2px}
+.share-sheet .harvest-tile .fixed-skills,.share-sheet .harvest-tile .fixed-skills .skill-row{gap:2px}
+.share-sheet .harvest-tile .mini-nature{width:49px;min-height:23px}
+.share-sheet .harvest-tile .berry-yield .berry-type{font-size:10px;padding:2px;letter-spacing:-.02em}
+.share-sheet .harvest-tile .assignment-identity .mini-nature{width:49px}

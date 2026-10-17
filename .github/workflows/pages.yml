@@ -28,7 +28,7 @@ jobs:
         run: |
           mkdir -p _site/licenses
           test -z "$(find assets/pokemon assets/berries -type f -name '*.png' -print)"
-          cp index.html style.css app.js board.js core.js data.js berries.js manifest.webmanifest favicon.ico _site/
+          cp index.html style.css note.css share.css app.js board.js core.js data.js berries.js manifest.webmanifest favicon.ico _site/
           cp -R assets _site/
           cp DATA_SOURCES.md _site/
           cp licenses/*.txt _site/licenses/
